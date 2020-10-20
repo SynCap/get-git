@@ -149,7 +149,7 @@ if (
 	Test-Path -LiteralPath "$NewDir"
 ) {
 	"Change dir to $WHT$NewDir$RST"
-	cd $NewDir
+	pushd $NewDir
 	Show-GitLog
 	Open-Readmes
 }
