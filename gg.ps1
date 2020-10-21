@@ -27,6 +27,14 @@ Param (
 	[Switch]
 	$ShowUsage=$false,
 
+	[Alias('e','Clean')]
+	[Switch]
+	$EraseExisting = $false,
+
+	[Alias('n')]
+	[Switch]
+	$NoReadme=$false,
+
 	[Alias("d")]
 	[Switch]
 	$DeepCopy,
@@ -37,7 +45,7 @@ Param (
 	$MaxReadmeSearchDepth = 1
 )
 
-################## Constants
+################## Color Constants
 
 	$RST="`e[0m"
 	$DEF="`e[37;40m"
@@ -60,57 +68,92 @@ Param (
 
 ################## Global Vars
 
+	$StartDir = (pwd).Path
 	$NewDir = ($DestDir ? $DestDir : $Url.Split('/')[-1].Split('.')[0])
 	$HrLength = [Math]::Min( $Host.UI.RawUI.WindowSize.Width, $GitRunCmd.Length )
 
 ###################################### Banner (Logo)
 
-"$GRN`nGet the Git $DEF[repo]$GRN (Powershell version)"
-"©2018-2020, CLosk`n"
+	"$GRN`nGet the Git $DEF[repo]$GRN (Powershell version)"
+	"©2018-2020, CLosk`n"
 
 ###################################### Functions
 
+function Finish ([int]$ExitCode = 0) {
+	cd $StartDir
+	$RST
+	Exit $ExitCode
+}
+
 function Show-Usage {
-	"Clone Git project to specified dir in shallow manner,"
-	"then show README files, then install NPMs, and start it"
-	"if you're ask for that. Whants to be a friend for JS people :)"
+	"$GRN`nClone remote Git project to specified dir in shallow manner,"
+	"then show$YLW README$GRN files, then install$YLW NPMs$GRN, and start it"
+	"if you're ask for that. Whants to be a friend for JS people$YLW_ :)$GRN"
 
 	"`nUsage: $YLW$((Get-Item $PSCommandPath).Basename)$WHT <git_repo_url>$GRN [dest_dir] [options]"
 
-	"`nSamples of valid$wht git_repo_url$($grn)s and source code repository:`n"
+	"`nSamples of valid$WHT git_repo_url$($GRN)s and source code repository:`n"
 
 	"  https://github.com/SynCap/get-git.git"
 	"  git@github.com:SynCap/get-git.git"
 
 	"`nOptions:"
+
+	"`n  -InstallNPM,"
 	"  -i  install NPMs if$WHT package.json$GRN exists"
+	"`n  -InstallYarn,"
 	"  -y  install NPMs with$YLW Yarn$GRN if$WHT package.json$GRN exists"
+
+	"`n  -RunNpmStart,"
 	"  -s  run$WHT npm start$GRN command if it present in$YLW package.json$GRN"
+	"`n  -RunYarnStart,"
 	"  -r  run$YLW yarn$WHT start$GRN command if it present in$YLW package.json$GRN"
+
+	"`n  -EraseExisting,"
+	"  -e $wht Erase$GRN target folder if exists"
+	"`n  -NoReadme,"
+	"  -n $wht NO README$GRN will be shown but found"
+
+	"`n  -DeepCopy,"
 	"  -d $WHT DEEP$GRN copy, i.e. no$YLW --depth=1$GRN param $RST`n"
+
+	"$WHT! NOTE !$GRN For processing$YLW package.json$GRN file$WHT jq$GRN utility being used."
+	"Look for it at$YLW https://stedolan.github.io/jq"
+
+	"$YLW`nExample:$CYN"
+	"  gg https://github.com/SynCap/get-git.git -NoReadme '~Get The GIT' -EraseExisting$RST`n"
+
+	"$YLW  1.$GRN URL must be placed before destination dir name"
+	"$YLW  2.$GRN New dir name may be omitted"
+	"$YLW  3.$GRN The placements of the other switches does not matter$RST"
+}
+
+function ConfirmEraseDest {
+	$ask = "$YLW_RED Warning! $WHT_RED Folder $CYN_RED$NewDir$WHT_RED seems alive! `n$RST"
+	$ask += "Are you sure you whant to erase existing folder? [$($YLW)y$RST/N]"
+	Return [bool]( (read-host $ask) -eq 'y' )
 }
 
 function Clone-Repo {
 
 	# !!!! ###########################
 	if ( Test-Path -LiteralPath "$NewDir" ) {
-		"$YLW_RED Warning! $WHT_RED Folder $CYN_RED$NewDir$WHT_RED exists $RST"
-		$ConfirmEarse = read-host "Are you sure you whant to erase existing folder? [$($YLW)y$RST/N]"
-		if ($ConfirmEarse -like 'y') {
+		if ($EraseExisting -or $( ConfirmEraseDest)) {
 			rmr $NewDir
 		} else {
-			$RST
-			exit -1
+			"User requested Exit"
+			Finish -1
 		}
 	}
 
-	"`n$RED■$YLW_ $NewDir $RED■$RST"
+	"`n$RED■$YLW_ $NewDir$RST"
 	draw (hr '■') DarkYellow
 	$RST
 
-	$GitPath = (Get-Command git).Source
+	$GitPath = 'git' # (Get-Command git).Source
 	$GitRunParams = @(
-		"clone"
+		"clone",
+		"-c core.symlinks=true"
 	)
 	if (!$DeepCopy) {
 		$GitRunParams += '--depth=1'
@@ -134,13 +177,15 @@ function Clone-Repo {
 }
 
 function Open-Readmes {
-	"`n$RED■$YLW_ README files $RED■$RST"
-	draw (hr `'),`n DarkYellow
+	"`n$RED■$YLW_ README files$RST"
+	draw (hr `') DarkYellow
 
 	$readmeFiles = ls "readme*" -Recurse -Depth $MaxReadmeSearchDepth | select FullName -First $MaxReadmes
 	$readmeFiles | % {
 		draw $_.FullName,`n DarkCyan;
-		& $_.FullName
+		if (!$NoReadme) {
+			& $_.FullName
+		}
 	}
 
 	draw (hr `'),`n DarkYellow
@@ -157,7 +202,7 @@ if (!$URL -and $ShowUsage) {
 }
 
 if (!$Url) {
-	Return
+	Finish 1
 }
 
 Clone-Repo
@@ -169,4 +214,4 @@ if ( Test-Path -LiteralPath "$NewDir" ) {
 	Open-Readmes
 }
 
-$RST
+Finish
