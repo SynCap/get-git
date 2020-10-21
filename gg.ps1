@@ -29,45 +29,55 @@ Param (
 
 	[Alias("d")]
 	[Switch]
-	$DeepCopy
+	$DeepCopy,
+
+	[int]
+	$MaxReadmes = 5,
+	[int]
+	$MaxReadmeSearchDepth = 1
 )
 
-$RST="`e[0m"
-$DEF="`e[37;40m"
+################## Constants
 
-$RED="`e[31;40m"
-$GRN="`e[32;40m"
-$YLW="`e[33;40m"
-$BLU="`e[34;40m"
-$PPL="`e[35;40m"
-$CYN="`e[36;40m"
-$WHT="`e[97;40m"
+	$RST="`e[0m"
+	$DEF="`e[37;40m"
 
-$RED_="`e[1;31;40m"
-$GRN_="`e[1;32;40m"
-$YLW_="`e[1;33;40m"
+	$RED="`e[31;40m"
+	$GRN="`e[32;40m"
+	$YLW="`e[33;40m"
+	$BLU="`e[34;40m"
+	$PPL="`e[35;40m"
+	$CYN="`e[36;40m"
+	$WHT="`e[97;40m"
 
-$YLW_RED="`e[1;33;41m"
-$WHT_RED="`e[1;37;41m"
+	$RED_="`e[1;31;40m"
+	$GRN_="`e[1;32;40m"
+	$YLW_="`e[1;33;40m"
 
-$NewDir = ($DestDir ? $DestDir : $Url.Split('/')[-1].Split('.')[0])
-$HrLength = [Math]::Min( (Get-Host).UI.RawUI.WindowSize.Width, $GitRunCmd.Length )
+	$YLW_RED="`e[1;33;41m"
+	$CYN_RED="`e[1;96;41m"
+	$WHT_RED="`e[1;37;41m"
+
+################## Global Vars
+
+	$NewDir = ($DestDir ? $DestDir : $Url.Split('/')[-1].Split('.')[0])
+	$HrLength = [Math]::Min( $Host.UI.RawUI.WindowSize.Width, $GitRunCmd.Length )
 
 ###################################### Banner (Logo)
 
-"$rst`nGet the Git $GRN[repo]$DEF (Powershell version)"
+"$GRN`nGet the Git $DEF[repo]$GRN (Powershell version)"
 "©2018-2020, CLosk`n"
 
 ###################################### Functions
 
 function Show-Usage {
 	"Clone Git project to specified dir in shallow manner,"
-	"then show README, then install NPMs, and start it"
-	"if you're ask for that."
+	"then show README files, then install NPMs, and start it"
+	"if you're ask for that. Whants to be a friend for JS people :)"
 
 	"`nUsage: $YLW$((Get-Item $PSCommandPath).Basename)$WHT <git_repo_url>$GRN [dest_dir] [options]"
 
-	"`nSamples of valid$wht git_repo_url$($def)s and source code repository:`n"
+	"`nSamples of valid$wht git_repo_url$($grn)s and source code repository:`n"
 
 	"  https://github.com/SynCap/get-git.git"
 	"  git@github.com:SynCap/get-git.git"
@@ -83,7 +93,16 @@ function Show-Usage {
 function Clone-Repo {
 
 	# !!!! ###########################
-	rmr $NewDir
+	if ( Test-Path -LiteralPath "$NewDir" ) {
+		"$YLW_RED Warning! $WHT_RED Folder $CYN_RED$NewDir$WHT_RED exists $RST"
+		$ConfirmEarse = read-host "Are you sure you whant to erase existing folder? [$($YLW)y$RST/N]"
+		if ($ConfirmEarse -like 'y') {
+			rmr $NewDir
+		} else {
+			$RST
+			exit -1
+		}
+	}
 
 	"`n$RED■$YLW_ $NewDir $RED■$RST"
 	draw (hr '■') DarkYellow
@@ -91,9 +110,7 @@ function Clone-Repo {
 
 	$GitPath = (Get-Command git).Source
 	$GitRunParams = @(
-		"clone",
-		"--verbose",
-		"--progress"
+		"clone"
 	)
 	if (!$DeepCopy) {
 		$GitRunParams += '--depth=1'
@@ -118,15 +135,15 @@ function Clone-Repo {
 
 function Open-Readmes {
 	"`n$RED■$YLW_ README files $RED■$RST"
-	draw (hr `' 16),`n
+	draw (hr `'),`n DarkYellow
 
-	$readmeFiles = ls "readme*" -Recurse -Depth 1 | select FullName -First 5
+	$readmeFiles = ls "readme*" -Recurse -Depth $MaxReadmeSearchDepth | select FullName -First $MaxReadmes
 	$readmeFiles | % {
 		draw $_.FullName,`n DarkCyan;
 		# & $_.FullName
 	}
 
-	draw (hr `' 16),`n
+	draw (hr `'),`n DarkYellow
 }
 
 function Show-GitLog {
@@ -145,9 +162,7 @@ if (!$Url) {
 
 Clone-Repo
 
-if (
-	Test-Path -LiteralPath "$NewDir"
-) {
+if ( Test-Path -LiteralPath "$NewDir" ) {
 	"Change dir to $WHT$NewDir$RST"
 	pushd $NewDir
 	Show-GitLog
