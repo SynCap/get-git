@@ -139,7 +139,7 @@ function Clone-Repo {
 	$GitPath = 'git' # (Get-Command git).Source
 	$GitRunParams = @(
 		"clone",
-		"-c core.symlinks=true",
+		"-c core.symlinks=true"
 	)
 	if (!$DeepCopy) {
 		$GitRunParams += '--depth=1'
