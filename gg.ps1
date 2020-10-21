@@ -11,17 +11,15 @@ Param (
 
 	[Alias("i")]
 	[Switch]
-	$InstallNPM,
-	[Alias("y")]
-	[Switch]
-	$InstallYarn,
+	$InstallPackages,
 
 	[Alias("s")]
-	[Switch]
-	$RunNpmStart,
-	[Alias("r")]
-	[Switch]
-	$RunYarnStart,
+	[String[]]
+	$RunScript,
+
+	[Alias('m')]
+	[String]
+	$PackageManager = 'yarn',
 
 	[Alias("h","help")]
 	[Switch]
@@ -99,15 +97,15 @@ function Show-Usage {
 
 	"`nOptions:"
 
-	"`n  -InstallNPM,"
+	"`n  -InstallPackages,"
 	"  -i  install NPMs if$WHT package.json$GRN exists"
-	"`n  -InstallYarn,"
-	"  -y  install NPMs with$YLW Yarn$GRN if$WHT package.json$GRN exists"
 
-	"`n  -RunNpmStart,"
-	"  -s  run$WHT npm start$GRN command if it present in$YLW package.json$GRN"
-	"`n  -RunYarnStart,"
-	"  -r  run$YLW yarn$WHT start$GRN command if it present in$YLW package.json$GRN"
+	"`n  -RunScript,"
+	"  -s  run$YLW npm run$WHT command$GRN if it present in$YLW package.json$GRN"
+	"      you may launch several commands sequentally:$YLW -s build,start$grn"
+
+	"`n  -PackageManager,"
+	"  -m  specify package manager to use:$WHT yarn$grn,$wht npm$grn"
 
 	"`n  -EraseExisting,"
 	"  -e $wht Erase$GRN target folder if exists"
@@ -121,7 +119,7 @@ function Show-Usage {
 	"Look for it at$YLW https://stedolan.github.io/jq"
 
 	"$YLW`nExample:$CYN"
-	"  gg https://github.com/SynCap/get-git.git -NoReadme '~Get The GIT' -EraseExisting$RST`n"
+	"  gg https://github.com/SynCap/get-git.git -NoReadme '~Get The GIT' -e -i -s -m yarn$RST`n"
 
 	"$YLW  1.$GRN URL must be placed before destination dir name"
 	"$YLW  2.$GRN New dir name may be omitted"
@@ -147,7 +145,7 @@ function Clone-Repo {
 	}
 
 	"`n$RED■$YLW_ $NewDir$RST"
-	draw (hr '■') DarkYellow
+	draw (hr `') DarkYellow
 	$RST
 
 	$GitPath = 'git' # (Get-Command git).Source
@@ -168,8 +166,7 @@ function Clone-Repo {
 	}
 
 	$GitRunCmd = $GitPath,($GitRunParams -join ' ') -join ' '
-	$GitRunCmd
-	draw (hr `' $HrLength),`n DarkYellow
+	"$GitRunCmd`n"
 
 	& $GitPath $GitRunParams
 
@@ -178,7 +175,6 @@ function Clone-Repo {
 
 function Open-Readmes {
 	"`n$RED■$YLW_ README files$RST"
-	draw (hr `') DarkYellow
 
 	$readmeFiles = ls "readme*" -Recurse -Depth $MaxReadmeSearchDepth | select FullName -First $MaxReadmes
 	$readmeFiles | % {
@@ -192,6 +188,7 @@ function Open-Readmes {
 }
 
 function Show-GitLog {
+
 	git log --graph "--date=format:%d.%m.%Y %H:%M:%S" "--pretty=format:%C(auto)%h%d %C(bold blue)%an %Cgreen%ad  %Creset%s" *
 }
 
@@ -199,6 +196,7 @@ function Show-GitLog {
 
 if (!$URL -and $ShowUsage) {
 	Show-Usage
+	Finish
 }
 
 if (!$Url) {
@@ -212,6 +210,10 @@ if ( Test-Path -LiteralPath "$NewDir" ) {
 	pushd $NewDir
 	Show-GitLog
 	Open-Readmes
+
+	if (Test-Path -LiteralPath 'package.json') {
+		"Found$YLW package.json$RST"
+	}
 }
 
 Finish
