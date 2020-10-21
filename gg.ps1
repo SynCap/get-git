@@ -27,6 +27,14 @@ Param (
 	[Switch]
 	$ShowUsage=$false,
 
+	[Alias('e','Clean')]
+	[Switch]
+	$EraseExisting = $false,
+
+	[Alias('n')]
+	[Switch]
+	$NoReadme=$false,
+
 	[Alias("d")]
 	[Switch]
 	$DeepCopy,
@@ -60,6 +68,7 @@ Param (
 
 ################## Global Vars
 
+	$StartDir = (pwd).Path
 	$NewDir = ($DestDir ? $DestDir : $Url.Split('/')[-1].Split('.')[0])
 	$HrLength = [Math]::Min( $Host.UI.RawUI.WindowSize.Width, $GitRunCmd.Length )
 
@@ -70,6 +79,12 @@ Param (
 
 ###################################### Functions
 
+function Finish ([int]$ExitCode = 0) {
+	cd $StartDir
+	$RST
+	Exit $ExitCode
+}
+
 function Show-Usage {
 	"Clone Git project to specified dir in shallow manner,"
 	"then show README files, then install NPMs, and start it"
@@ -77,40 +92,54 @@ function Show-Usage {
 
 	"`nUsage: $YLW$((Get-Item $PSCommandPath).Basename)$WHT <git_repo_url>$GRN [dest_dir] [options]"
 
-	"`nSamples of valid$wht git_repo_url$($grn)s and source code repository:`n"
+	"`nSamples of valid$WHT git_repo_url$($GRN)s and source code repository:`n"
 
 	"  https://github.com/SynCap/get-git.git"
 	"  git@github.com:SynCap/get-git.git"
 
 	"`nOptions:"
+	"  -InstallNPM,"
 	"  -i  install NPMs if$WHT package.json$GRN exists"
+	"  -InstallYarn,"
 	"  -y  install NPMs with$YLW Yarn$GRN if$WHT package.json$GRN exists"
+
+	"  -RunNpmStart,"
 	"  -s  run$WHT npm start$GRN command if it present in$YLW package.json$GRN"
+	"  -RunYarnStart,"
 	"  -r  run$YLW yarn$WHT start$GRN command if it present in$YLW package.json$GRN"
+
+	"  -EraseExisting,"
+	"  -e $wht Erase$GRN target folder if exists"
+	"  -NoReadme,"
+	"  -n $wht NO README$GRN will be shown but found"
+	"  -DeepCopy,"
 	"  -d $WHT DEEP$GRN copy, i.e. no$YLW --depth=1$GRN param $RST`n"
+}
+
+function ConfirmEraseDest {
+	"$YLW_RED Warning! $WHT_RED Folder $CYN_RED$NewDir$WHT_RED exists $RST"
+	read-host "Are you sure you whant to erase existing folder? [$($YLW)y$RST/N]"
 }
 
 function Clone-Repo {
 
 	# !!!! ###########################
 	if ( Test-Path -LiteralPath "$NewDir" ) {
-		"$YLW_RED Warning! $WHT_RED Folder $CYN_RED$NewDir$WHT_RED exists $RST"
-		$ConfirmEarse = read-host "Are you sure you whant to erase existing folder? [$($YLW)y$RST/N]"
-		if ($ConfirmEarse -like 'y') {
+		if ($EraseExisting -or $ConfirmEraseDest -like 'y') {
 			rmr $NewDir
 		} else {
-			$RST
-			exit -1
+			Finish -1
 		}
 	}
 
-	"`n$RED■$YLW_ $NewDir $RED■$RST"
+	"`n$RED■$YLW_ $NewDir$RST"
 	draw (hr '■') DarkYellow
 	$RST
 
-	$GitPath = (Get-Command git).Source
+	$GitPath = 'git' # (Get-Command git).Source
 	$GitRunParams = @(
-		"clone"
+		"clone",
+		"-c core.symlinks=true",
 	)
 	if (!$DeepCopy) {
 		$GitRunParams += '--depth=1'
@@ -134,13 +163,15 @@ function Clone-Repo {
 }
 
 function Open-Readmes {
-	"`n$RED■$YLW_ README files $RED■$RST"
-	draw (hr `'),`n DarkYellow
+	"`n$RED■$YLW_ README files$RST"
+	draw (hr `') DarkYellow
 
 	$readmeFiles = ls "readme*" -Recurse -Depth $MaxReadmeSearchDepth | select FullName -First $MaxReadmes
 	$readmeFiles | % {
 		draw $_.FullName,`n DarkCyan;
-		& $_.FullName
+		if (!$NoReadme) {
+			& $_.FullName
+		}
 	}
 
 	draw (hr `'),`n DarkYellow
@@ -169,4 +200,4 @@ if ( Test-Path -LiteralPath "$NewDir" ) {
 	Open-Readmes
 }
 
-$RST
+Finish
