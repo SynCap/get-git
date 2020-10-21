@@ -2,26 +2,28 @@ Param (
 	[Parameter (Position=0)]
 	[ValidateNotNullOrEmpty()]
 	[ValidatePattern("^(git@|https:).*\.git/?$")]
+	[Alias('Source')]
 	[string]
 	$Url,
 
+	[Alias('Dest','o')]
 	[Parameter(Position=1)]
 	[string]
 	$DestDir,
 
-	[Alias("i")]
+	[Alias('i')]
 	[Switch]
 	$InstallPackages,
 
-	[Alias("s")]
+	[Alias('r','Run','Script')]
 	[String[]]
 	$RunScript,
 
-	[Alias('m')]
+	[Alias('m','Mgr')]
 	[String]
 	$PackageManager = 'yarn',
 
-	[Alias("h","help")]
+	[Alias('h','help')]
 	[Switch]
 	$ShowUsage=$false,
 
@@ -33,7 +35,7 @@ Param (
 	[Switch]
 	$NoReadme=$false,
 
-	[Alias("d")]
+	[Alias('d')]
 	[Switch]
 	$DeepCopy,
 
@@ -55,10 +57,12 @@ Param (
 	$PPL="`e[35;40m"
 	$CYN="`e[36;40m"
 	$WHT="`e[97;40m"
+	$DGY="`e[90;40m"
 
 	$RED_="`e[1;31;40m"
 	$GRN_="`e[1;32;40m"
 	$YLW_="`e[1;33;40m"
+	$CYN_="`e[96;40m"
 
 	$YLW_RED="`e[1;33;41m"
 	$CYN_RED="`e[1;96;41m"
@@ -101,7 +105,7 @@ function Show-Usage {
 	"  -i  install NPMs if$WHT package.json$GRN exists"
 
 	"`n  -RunScript,"
-	"  -s  run$YLW npm run$WHT command$GRN if it present in$YLW package.json$GRN"
+	"  -r  run$YLW npm run$WHT command$GRN if it present in$YLW package.json$GRN"
 	"      you may launch several commands sequentally:$YLW -s build,start$grn"
 
 	"`n  -PackageManager,"
@@ -119,7 +123,7 @@ function Show-Usage {
 	"Look for it at$YLW https://stedolan.github.io/jq"
 
 	"$YLW`nExample:$CYN"
-	"  gg https://github.com/SynCap/get-git.git -NoReadme '~Get The GIT' -e -i -s -m yarn$RST`n"
+	"$WHT  gg$CYN_ https://github.com/SynCap/get-git.git$wht -NoReadme$CYN '~Get The GIT'$wht -e -i -r -m$dgy yarn$RST`n"
 
 	"$YLW  1.$GRN URL must be placed before destination dir name"
 	"$YLW  2.$GRN New dir name may be omitted"
