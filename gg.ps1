@@ -45,7 +45,7 @@ Param (
 	$MaxReadmeSearchDepth = 1
 )
 
-################## Constants
+################## Color Constants
 
 	$RST="`e[0m"
 	$DEF="`e[37;40m"
@@ -74,8 +74,8 @@ Param (
 
 ###################################### Banner (Logo)
 
-"$GRN`nGet the Git $DEF[repo]$GRN (Powershell version)"
-"©2018-2020, CLosk`n"
+	"$GRN`nGet the Git $DEF[repo]$GRN (Powershell version)"
+	"©2018-2020, CLosk`n"
 
 ###################################### Functions
 
@@ -98,22 +98,27 @@ function Show-Usage {
 	"  git@github.com:SynCap/get-git.git"
 
 	"`nOptions:"
-	"  -InstallNPM,"
+
+	"`n  -InstallNPM,"
 	"  -i  install NPMs if$WHT package.json$GRN exists"
-	"  -InstallYarn,"
+	"`n  -InstallYarn,"
 	"  -y  install NPMs with$YLW Yarn$GRN if$WHT package.json$GRN exists"
 
-	"  -RunNpmStart,"
+	"`n  -RunNpmStart,"
 	"  -s  run$WHT npm start$GRN command if it present in$YLW package.json$GRN"
-	"  -RunYarnStart,"
+	"`n  -RunYarnStart,"
 	"  -r  run$YLW yarn$WHT start$GRN command if it present in$YLW package.json$GRN"
 
-	"  -EraseExisting,"
+	"`n  -EraseExisting,"
 	"  -e $wht Erase$GRN target folder if exists"
-	"  -NoReadme,"
+	"`n  -NoReadme,"
 	"  -n $wht NO README$GRN will be shown but found"
-	"  -DeepCopy,"
+
+	"`n  -DeepCopy,"
 	"  -d $WHT DEEP$GRN copy, i.e. no$YLW --depth=1$GRN param $RST`n"
+
+	"$WHT! NOTE !$GRN For processing$YLW package.json file$GRN jq utility is used."
+	"Look for it at$YLW https://stedolan.github.io/jq$RST`n"
 }
 
 function ConfirmEraseDest {
@@ -188,7 +193,7 @@ if (!$URL -and $ShowUsage) {
 }
 
 if (!$Url) {
-	Return
+	Finish 1
 }
 
 Clone-Repo
