@@ -129,18 +129,19 @@ function Show-Usage {
 }
 
 function ConfirmEraseDest {
-	echo "$YLW_RED Warning! $WHT_RED Folder $CYN_RED$NewDir$WHT_RED exists $RST"
-	$ask = "Are you sure you whant to erase existing folder? [$($YLW)y$RST/N]"
-	[bool]( (read-host $ask) -eq 'y' )
+	$ask = "$YLW_RED Warning! $WHT_RED Folder $CYN_RED$NewDir$WHT_RED seems alive! `n$RST"
+	$ask += "Are you sure you whant to erase existing folder? [$($YLW)y$RST/N]"
+	Return [bool]( (read-host $ask) -eq 'y' )
 }
 
 function Clone-Repo {
 
 	# !!!! ###########################
 	if ( Test-Path -LiteralPath "$NewDir" ) {
-		if ($EraseExisting -or ( ConfirmEraseDest )) {
+		if ($EraseExisting -or $( ConfirmEraseDest)) {
 			rmr $NewDir
 		} else {
+			"User requested Exit"
 			Finish -1
 		}
 	}
