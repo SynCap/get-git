@@ -140,7 +140,7 @@ function Open-Readmes {
 	$readmeFiles = ls "readme*" -Recurse -Depth $MaxReadmeSearchDepth | select FullName -First $MaxReadmes
 	$readmeFiles | % {
 		draw $_.FullName,`n DarkCyan;
-		# & $_.FullName
+		& $_.FullName
 	}
 
 	draw (hr `'),`n DarkYellow
