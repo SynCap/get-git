@@ -40,7 +40,7 @@ TARGET="$2"
 # check params: if no params
 if [[ $# -lt 1 ]];then
 	echo -e $GRN
-	echo -e "Get the Git"
+	echo -e "Get the Git [repo] (BASH version)"
 	echo -e "(c)2018-2019,$YLW CLosk$GRN\n"
 	echo -e "Clone Git project to specified dir in shallow manner,"
 	echo -e "then show README, then install NPMs and start it if any.\n"
