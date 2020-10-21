@@ -1,0 +1,8 @@
+{
+  "name": "Dev",
+  "scripts": {
+  	"start": "echo \"Start script from package.json was launched\""
+  },
+  "dependencies": {
+  }
+}
