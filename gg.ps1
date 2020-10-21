@@ -86,9 +86,9 @@ function Finish ([int]$ExitCode = 0) {
 }
 
 function Show-Usage {
-	"Clone Git project to specified dir in shallow manner,"
-	"then show README files, then install NPMs, and start it"
-	"if you're ask for that. Whants to be a friend for JS people :)"
+	"$GRN`nClone remote Git project to specified dir in shallow manner,"
+	"then show$YLW README$GRN files, then install$YLW NPMs$GRN, and start it"
+	"if you're ask for that. Whants to be a friend for JS people$YLW_ :)$GRN"
 
 	"`nUsage: $YLW$((Get-Item $PSCommandPath).Basename)$WHT <git_repo_url>$GRN [dest_dir] [options]"
 
@@ -117,20 +117,28 @@ function Show-Usage {
 	"`n  -DeepCopy,"
 	"  -d $WHT DEEP$GRN copy, i.e. no$YLW --depth=1$GRN param $RST`n"
 
-	"$WHT! NOTE !$GRN For processing$YLW package.json file$GRN jq utility is used."
-	"Look for it at$YLW https://stedolan.github.io/jq$RST`n"
+	"$WHT! NOTE !$GRN For processing$YLW package.json$GRN file$WHT jq$GRN utility being used."
+	"Look for it at$YLW https://stedolan.github.io/jq"
+
+	"$YLW`nExample:$CYN"
+	"  gg https://github.com/SynCap/get-git.git -NoReadme '~Get The GIT' -EraseExisting$RST`n"
+
+	"$YLW  1.$GRN URL must be placed before destination dir name"
+	"$YLW  2.$GRN New dir name may be omitted"
+	"$YLW  3.$GRN The placements of the other switches does not matter$RST"
 }
 
 function ConfirmEraseDest {
-	"$YLW_RED Warning! $WHT_RED Folder $CYN_RED$NewDir$WHT_RED exists $RST"
-	read-host "Are you sure you whant to erase existing folder? [$($YLW)y$RST/N]"
+	echo "$YLW_RED Warning! $WHT_RED Folder $CYN_RED$NewDir$WHT_RED exists $RST"
+	$ask = "Are you sure you whant to erase existing folder? [$($YLW)y$RST/N]"
+	[bool]( (read-host $ask) -eq 'y' )
 }
 
 function Clone-Repo {
 
 	# !!!! ###########################
 	if ( Test-Path -LiteralPath "$NewDir" ) {
-		if ($EraseExisting -or $ConfirmEraseDest -like 'y') {
+		if ($EraseExisting -or ( ConfirmEraseDest )) {
 			rmr $NewDir
 		} else {
 			Finish -1
