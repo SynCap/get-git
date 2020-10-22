@@ -140,11 +140,8 @@ function Show-Usage {
 	"`n  -DeepCopy,"
 	"  -d $WHT DEEP$GRN copy, i.e. no$YLW --depth=1$GRN param $RST`n"
 
-	# "$WHT! NOTE !$GRN For processing$YLW package.json$GRN file$WHT jq$GRN utility being used."
-	# "Look for it at$YLW https://stedolan.github.io/jq"
-
 	"$YLW`nExample:$CYN"
-	"$WHT  $ggName$CYN_ https://github.com/SynCap/get-git.git$wht -NoReadme$CYN '~Get The GIT'$wht -e -i -r$dgy dev$wht -m$dgy yarn$RST`n"
+	"$WHT  $ggName$CYN_ https://github.com/SynCap/get-git.git$wht -NoReadme$CYN '~Get The GIT'$wht -e -i -r$dgy dev,build,start,format$wht -m$dgy npm$RST`n"
 
 	"$YLW  1.$GRN URL must be placed before destination dir name"
 	"$YLW  2.$GRN New dir name may be omitted"
@@ -252,19 +249,21 @@ if ( Test-Path -LiteralPath "$NewDir" ) {
 if (Test-Path 'package.json') {
 
 	if ($InstallPackages) {
-		"Asked for install"
-		"Command line to be launched: $PackageManager $($Launch[$PackageManager].Install)"
-		# & $PackageManager $($Launch[$PackageManager].Install)
+		"`nInstallation was requested. Prepare:$WHT $PackageManager$YLW $($Launch[$PackageManager].Install)$RST"
+		& $PackageManager $($Launch[$PackageManager].Install)
+		Write-Host (hr `'),"`n" -Foreground DarkYellow
 	}
 
 	if ($RunScripts.Count) {
-		"Ordered to launch the $ scripts."
+		"Ordered to launch the$wht $($RunScripts.Count)$rst scripts."
 
 		$s = (Get-Content 'package.json' | ConvertFrom-Json).scripts
 
 		$RunScripts.ForEach({
-			echo "& $PackageManager $($Launch[$PackageManager].Run -f $_)"
-			})
+			"`n$RED■&$WHT $PackageManager$YLW $($Launch[$PackageManager].Run -f $_)$RST"
+			"$YLW$(hr `')$RST"
+			& $PackageManager @($Launch[$PackageManager].Run -f $_)
+		})
 	}
 }
 
