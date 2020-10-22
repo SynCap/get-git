@@ -87,8 +87,6 @@ function Finish ([int]$ExitCode = 0) {
 
 	################################### DEBUG
 
-	"Script name:"
-		"`n`t`$ggName = $ggName"
 
 	################################### Real FINISH
 
@@ -213,10 +211,10 @@ if (!$Url) {
 	if ($ShowUsage) {
 		Show-Usage
 	} else {
-		"`nTo obtain information about the applicable parameters please use:"
-		"$wht`t$ggName$dgy -Help$grn"
-		"`nor"
-		"$wht`tGet-Help$dgy $ggName$def`n"
+		"To get informed about the launch parameters please use:"
+		"$wht> $ggName$dgy -Help$grn"
+		"    or"
+		"$wht> Get-Help$dgy $ggName$def`n"
 	}
 	Finish 1
 }
