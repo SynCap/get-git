@@ -1,5 +1,6 @@
 {
   "name": "Dev",
+  "licence": "MIT",
   "scripts": {
   	"start": "echo \"START script from package.json\"",
   	"dev": "echo \"DEV script from package.json\"",
