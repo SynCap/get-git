@@ -235,8 +235,8 @@ if (!$Url) {
 	Finish 1
 }
 
-# Check-DestDir
-# Clone-Repo
+Check-DestDir
+Clone-Repo
 
 if ( Test-Path -LiteralPath "$NewDir" ) {
 	"Change dir to $WHT$NewDir$RST"
