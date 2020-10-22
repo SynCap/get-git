@@ -257,10 +257,10 @@ if (Test-Path 'package.json') {
 	if ($RunScripts.Count) {
 		"Ordered to launch the$wht $($RunScripts.Count)$rst scripts."
 
-		$s = (Get-Content 'package.json' | ConvertFrom-Json).scripts
+		$PkgScripts = (Get-Content 'package.json' | ConvertFrom-Json -AsHashtable).scripts
 
 		$RunScripts.ForEach({
-			"`n$RED■&$WHT $PackageManager$YLW $($Launch[$PackageManager].Run -f $_)$RST"
+			"`n$RED■$WHT $PackageManager$YLW $($Launch[$PackageManager].Run -f $_)$RST"
 			"$YLW$(hr `')$RST"
 			& $PackageManager @($Launch[$PackageManager].Run -f $_)
 		})

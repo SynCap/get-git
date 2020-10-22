@@ -4,7 +4,7 @@
   "scripts": {
   	"start": "echo \"START script from package.json\"",
   	"dev": "echo \"DEV script from package.json\"",
-  	"buld": "echo \"BUILD script from package.json\""
+  	"build": "echo \"BUILD script from package.json\""
   },
   "dependencies": {
   }
