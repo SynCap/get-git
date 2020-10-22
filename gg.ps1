@@ -17,7 +17,7 @@ Param (
 
 	[Alias('r','Run','Script')]
 	[String[]]
-	$RunScript,
+	$RunScripts,
 
 	[Alias('m','Mgr')]
     [ValidateSet('Yarn','NPM')]
@@ -76,6 +76,19 @@ Param (
 	$NewDir = ($DestDir ? $DestDir : $Url.Split('/')[-1].Split('.')[0])
 	$HrLength = [Math]::Min( $Host.UI.RawUI.WindowSize.Width, $GitRunCmd.Length )
 
+	$IsDebugging = $true
+
+	$Launch = @{
+		yarn = @{
+			Install = '';
+			Run = '{0}';
+		};
+		npm = @{
+			Install = 'install';
+			Run = 'run {0}';
+		};
+	}
+
 ###################################### Banner (Logo)
 
 	"$GRN`nGet the Git $DEF[repo]$GRN (Powershell version)"
@@ -102,7 +115,7 @@ function Show-Usage {
 
 	"`nUsage: $YLW$((Get-Item $PSCommandPath).Basename)$WHT <git_repo_url>$GRN [dest_dir] [options]"
 
-	"`nSamples of valid$WHT git_repo_url$($GRN)s and source code repository:`n"
+	"`nSamples of valid$WHT git_repo_url$($GRN)s and source code links:`n"
 
 	"  https://github.com/SynCap/get-git.git"
 	"  git@github.com:SynCap/get-git.git"
@@ -127,11 +140,11 @@ function Show-Usage {
 	"`n  -DeepCopy,"
 	"  -d $WHT DEEP$GRN copy, i.e. no$YLW --depth=1$GRN param $RST`n"
 
-	"$WHT! NOTE !$GRN For processing$YLW package.json$GRN file$WHT jq$GRN utility being used."
-	"Look for it at$YLW https://stedolan.github.io/jq"
+	# "$WHT! NOTE !$GRN For processing$YLW package.json$GRN file$WHT jq$GRN utility being used."
+	# "Look for it at$YLW https://stedolan.github.io/jq"
 
 	"$YLW`nExample:$CYN"
-	"$WHT  $ggName$CYN_ https://github.com/SynCap/get-git.git$wht -NoReadme$CYN '~Get The GIT'$wht -e -i -r -m$dgy yarn$RST`n"
+	"$WHT  $ggName$CYN_ https://github.com/SynCap/get-git.git$wht -NoReadme$CYN '~Get The GIT'$wht -e -i -r$dgy dev$wht -m$dgy yarn$RST`n"
 
 	"$YLW  1.$GRN URL must be placed before destination dir name"
 	"$YLW  2.$GRN New dir name may be omitted"
@@ -144,9 +157,7 @@ function ConfirmEraseDest {
 	Return [bool]( (read-host $ask) -eq 'y' )
 }
 
-function Clone-Repo {
-
-	# !!!! ###########################
+function Check-DestDir {
 	if ( Test-Path -LiteralPath "$NewDir" ) {
 		if ($EraseExisting -or $( ConfirmEraseDest)) {
 			rmr $NewDir
@@ -155,11 +166,14 @@ function Clone-Repo {
 			Finish -1
 		}
 	}
+}
 
+function Clone-Repo {
 	"`n$RED■$YLW_ $NewDir$RST"
 	draw (hr `') DarkYellow
 	$RST
 
+	# Collect all params to launch clone job
 	$GitPath = 'git' # (Get-Command git).Source
 	$GitRunParams = @(
 		"clone",
@@ -177,9 +191,11 @@ function Clone-Repo {
 			$DestDir
 	}
 
+	# Just shows command line as how it may composed manually
 	$GitRunCmd = $GitPath,($GitRunParams -join ' ') -join ' '
 	"$GitRunCmd`n"
 
+	# Really launches the cloning
 	& $GitPath $GitRunParams
 
 	draw (hr `' $HrLength),`n DarkYellow
@@ -188,7 +204,7 @@ function Clone-Repo {
 function Open-Readmes {
 	"`n$RED■$YLW_ README files$RST"
 
-	$readmeFiles = ls "readme*" -Recurse -Depth $MaxReadmeSearchDepth | select FullName -First $MaxReadmes
+	$readmeFiles = Get-ChildItem "readme*" -Recurse -Depth $MaxReadmeSearchDepth | select FullName -First $MaxReadmes
 	$readmeFiles | % {
 		draw $_.FullName,`n DarkCyan;
 		if (!$NoReadme) {
@@ -219,7 +235,8 @@ if (!$Url) {
 	Finish 1
 }
 
-Clone-Repo
+# Check-DestDir
+# Clone-Repo
 
 if ( Test-Path -LiteralPath "$NewDir" ) {
 	"Change dir to $WHT$NewDir$RST"
@@ -229,6 +246,25 @@ if ( Test-Path -LiteralPath "$NewDir" ) {
 
 	if (Test-Path -LiteralPath 'package.json') {
 		"Found$YLW package.json$RST"
+	}
+}
+
+if (Test-Path 'package.json') {
+
+	if ($InstallPackages) {
+		"Asked for install"
+		"Command line to be launched: $PackageManager $($Launch[$PackageManager].Install)"
+		# & $PackageManager $($Launch[$PackageManager].Install)
+	}
+
+	if ($RunScripts.Count) {
+		"Ordered to launch the $ scripts."
+
+		$s = (Get-Content 'package.json' | ConvertFrom-Json).scripts
+
+		$RunScripts.ForEach({
+			echo "& $PackageManager $($Launch[$PackageManager].Run -f $_)"
+			})
 	}
 }
 
