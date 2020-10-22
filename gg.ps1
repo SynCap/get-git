@@ -20,8 +20,9 @@ Param (
 	$RunScript,
 
 	[Alias('m','Mgr')]
-	[String]
-	$PackageManager = 'yarn',
+    [ValidateSet('Yarn','NPM')]
+    [String]
+	$PackageManager = "yarn",
 
 	[Alias('h','help')]
 	[Switch]
@@ -70,6 +71,7 @@ Param (
 
 ################## Global Vars
 
+	$ggName = $MyInvocation.InvocationName
 	$StartDir = (pwd).Path
 	$NewDir = ($DestDir ? $DestDir : $Url.Split('/')[-1].Split('.')[0])
 	$HrLength = [Math]::Min( $Host.UI.RawUI.WindowSize.Width, $GitRunCmd.Length )
@@ -82,6 +84,14 @@ Param (
 ###################################### Functions
 
 function Finish ([int]$ExitCode = 0) {
+
+	################################### DEBUG
+
+	"Script name:"
+		"`n`t`$ggName = $ggName"
+
+	################################### Real FINISH
+
 	cd $StartDir
 	$RST
 	Exit $ExitCode
@@ -104,9 +114,9 @@ function Show-Usage {
 	"`n  -InstallPackages,"
 	"  -i  install NPMs if$WHT package.json$GRN exists"
 
-	"`n  -RunScript,"
+	"`n  -RunScript, -Run,"
 	"  -r  run$YLW npm run$WHT command$GRN if it present in$YLW package.json$GRN"
-	"      you may launch several commands sequentally:$YLW -s build,start$grn"
+	"      you may launch several commands sequentally:$YLW -Run build,start$grn"
 
 	"`n  -PackageManager,"
 	"  -m  specify package manager to use:$WHT yarn$grn,$wht npm$grn"
@@ -123,7 +133,7 @@ function Show-Usage {
 	"Look for it at$YLW https://stedolan.github.io/jq"
 
 	"$YLW`nExample:$CYN"
-	"$WHT  gg$CYN_ https://github.com/SynCap/get-git.git$wht -NoReadme$CYN '~Get The GIT'$wht -e -i -r -m$dgy yarn$RST`n"
+	"$WHT  $ggName$CYN_ https://github.com/SynCap/get-git.git$wht -NoReadme$CYN '~Get The GIT'$wht -e -i -r -m$dgy yarn$RST`n"
 
 	"$YLW  1.$GRN URL must be placed before destination dir name"
 	"$YLW  2.$GRN New dir name may be omitted"
@@ -198,12 +208,16 @@ function Show-GitLog {
 
 ################################### MAIN
 
-if (!$URL -and $ShowUsage) {
-	Show-Usage
-	Finish
-}
 
 if (!$Url) {
+	if ($ShowUsage) {
+		Show-Usage
+	} else {
+		"`nTo obtain information about the applicable parameters please use:"
+		"$wht`t$ggName$dgy -Help$grn"
+		"`nor"
+		"$wht`tGet-Help$dgy $ggName$def`n"
+	}
 	Finish 1
 }
 
@@ -219,5 +233,7 @@ if ( Test-Path -LiteralPath "$NewDir" ) {
 		"Found$YLW package.json$RST"
 	}
 }
+
+################################### That's All Folsk!
 
 Finish
