@@ -262,7 +262,12 @@ if (Test-Path 'package.json') {
 		$RunScripts.ForEach({
 			"`n$RED■$WHT $PackageManager$YLW $($Launch[$PackageManager].Run -f $_)$RST"
 			"$YLW$(hr `')$RST"
-			& $PackageManager @($Launch[$PackageManager].Run -f $_)
+
+			if (!$PkgScripts[$_]) {
+				"$YLW_RED $_$WHT_RED not found in$YLW_RED package.json $RST"
+			} else {
+				& $PackageManager ($Launch[$PackageManager].Run -f $_).Split(' ')
+			}
 		})
 	}
 }
