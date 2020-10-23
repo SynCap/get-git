@@ -1,49 +1,40 @@
 Param (
+	# Source repository URL
 	[Parameter (Position=0)]
 	[ValidateNotNullOrEmpty()]
 	[ValidatePattern("^(git@|https:).*\.git/?$")]
 	[Alias('Source')]
-	[string]
-	$Url,
+	[string] $Url,
 
+	# Destination directory name
 	[Alias('Dest','o')]
 	[Parameter(Position=1)]
-	[string]
-	$DestDir,
+	[string] $DestDir,
 
-	[Alias('i')]
-	[Switch]
-	$InstallPackages,
+	# Show usage information, describes parameters and swithches
+	[Alias('h','help')]  [Switch] $ShowUsage,
+	# Turn off depth limitations. See `git help clone --depth`
+	[Alias('d')]         [Switch] $DeepCopy,
+	# Forcibly era destination folder if exists. Git itself do not clone project into existing directories
+	[Alias('e')] [Switch] $EraseExisting,
+	# Install node packages if `package.json` file present at the root of newly cloned project
+	[Alias('i')]         [Switch] $InstallPackages,
+	# GG automatically opens README files from cloned project. This switch turns off this behovoir
+	[Alias('n')]         [Switch] $NoReadme,
 
-	[Alias('r','Run','Script')]
-	[String[]]
-	$RunScripts,
-
+	# Specify Node package manager to use for install and/or start the scripts. Yarn specified by default. No checking for installed managers is provided.
 	[Alias('m','Mgr')]
     [ValidateSet('Yarn','NPM')]
-    [String]
-	$PackageManager = "yarn",
+    [String] $PackageManager = "yarn",
 
-	[Alias('h','help')]
-	[Switch]
-	$ShowUsage=$false,
+    # If `package.json` in cloned project and `scripts` are specified in it the GG can launch them. To do this specify all needed to launch scripts in order to be launched.
+	[Alias('r','Run','Script')]
+	[String[]] $RunScripts,
 
-	[Alias('e','Clean')]
-	[Switch]
-	$EraseExisting = $false,
-
-	[Alias('n')]
-	[Switch]
-	$NoReadme=$false,
-
-	[Alias('d')]
-	[Switch]
-	$DeepCopy,
-
-	[int]
-	$MaxReadmes = 5,
-	[int]
-	$MaxReadmeSearchDepth = 1
+	# Some projects can contains tons of README.md, README.txt, and so on. To limit number of files that can be opened this parameter is.
+	[int] $MaxReadmes = 3,
+	# In some project there a tons of readme in deep subfolders. Often they are not critical for quick start so limiting the depth of searching for README is useful.
+	[int] $MaxReadmeSearchDepth = 1
 )
 
 ################## Color Constants
