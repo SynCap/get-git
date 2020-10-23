@@ -3,47 +3,27 @@ Param (
 	[ValidateNotNullOrEmpty()]
 	[ValidatePattern("^(git@|https:).*\.git/?$")]
 	[Alias('Source')]
-	[string]
-	$Url,
+	[string] $Url,
 
 	[Alias('Dest','o')]
 	[Parameter(Position=1)]
-	[string]
-	$DestDir,
-
-	[Alias('i')]
-	[Switch]
-	$InstallPackages,
+	[string] $DestDir,
 
 	[Alias('r','Run','Script')]
-	[String[]]
-	$RunScripts,
+	[String[]] $RunScripts,
 
 	[Alias('m','Mgr')]
     [ValidateSet('Yarn','NPM')]
-    [String]
-	$PackageManager = "yarn",
+    [String] $PackageManager = "yarn",
 
-	[Alias('h','help')]
-	[Switch]
-	$ShowUsage=$false,
+	[Alias('h','help')]  [Switch] $ShowUsage,
+	[Alias('d')]         [Switch] $DeepCopy,
+	[Alias('e')] [Switch] $EraseExisting,
+	[Alias('i')]         [Switch] $InstallPackages,
+	[Alias('n')]         [Switch] $NoReadme,
 
-	[Alias('e','Clean')]
-	[Switch]
-	$EraseExisting = $false,
-
-	[Alias('n')]
-	[Switch]
-	$NoReadme=$false,
-
-	[Alias('d')]
-	[Switch]
-	$DeepCopy,
-
-	[int]
-	$MaxReadmes = 5,
-	[int]
-	$MaxReadmeSearchDepth = 1
+	[int] $MaxReadmes = 3,
+	[int] $MaxReadmeSearchDepth = 1
 )
 
 ################## Color Constants
