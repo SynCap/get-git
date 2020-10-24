@@ -15,25 +15,34 @@ Param (
 	[Alias('h','help')]  [Switch] $ShowUsage,
 	# Turn off depth limitations. See `git help clone --depth`
 	[Alias('d')]         [Switch] $DeepCopy,
-	# Forcibly era destination folder if exists. Git itself do not clone project into existing directories
+	# Forcibly era destination folder if exists. Git itself do not clone project
+	# into existing directories
 	[Alias('e')] [Switch] $EraseExisting,
-	# Install node packages if `package.json` file present at the root of newly cloned project
+	# Install node packages if `package.json` file present at the root of newly
+	# cloned project
 	[Alias('i')]         [Switch] $InstallPackages,
-	# GG automatically opens README files from cloned project. This switch turns off this behovoir
+	# GG automatically opens README files from cloned project. This switch turns
+	# off this behovoir
 	[Alias('n')]         [Switch] $NoReadme,
 
-	# Specify Node package manager to use for install and/or start the scripts. Yarn specified by default. No checking for installed managers is provided.
+	# Specify Node package manager to use for install and/or start the scripts.
+	# Yarn specified by default. No checking for installed managers is provided.
 	[Alias('m','Mgr')]
     [ValidateSet('Yarn','NPM')]
     [String] $PackageManager = "yarn",
 
-    # If `package.json` in cloned project and `scripts` are specified in it the GG can launch them. To do this specify all needed to launch scripts in order to be launched.
+    # If `package.json` in cloned project and `scripts` are specified in it the
+    # GG can launch them. To do this specify all needed to launch scripts in
+    # order to be launched.
 	[Alias('r','Run','Script')]
 	[String[]] $RunScripts,
 
-	# Some projects can contains tons of README.md, README.txt, and so on. To limit number of files that can be opened this parameter is.
+	# Some projects can contains tons of README.md, README.txt, and so on. To
+	# limit number of files that can be opened this parameter is.
 	[int] $MaxReadmes = 3,
-	# In some project there a tons of readme in deep subfolders. Often they are not critical for quick start so limiting the depth of searching for README is useful.
+	# In some project there a tons of readme in deep subfolders. Often they are
+	# not critical for quick start so limiting the depth of searching for README
+	# is useful.
 	[int] $MaxReadmeSearchDepth = 1
 )
 
@@ -132,7 +141,8 @@ function Show-Usage {
 	"  -d $WHT DEEP$GRN copy, i.e. no$YLW --depth=1$GRN param $RST`n"
 
 	"$YLW`nExample:$CYN"
-	"$WHT  $ggName$CYN_ https://github.com/SynCap/get-git.git$wht -NoReadme$CYN '~Get The GIT'$wht -e -i -r$dgy dev,build,start,format$wht -m$dgy npm$RST`n"
+	"$WHT  $ggName$CYN_ https://github.com/SynCap/get-git.git$wht -NoReadme$CYN ``"
+	"      '~Get The GIT'$wht -e -i -r$dgy test,build$wht -m$dgy npm$RST`n"
 
 	"$YLW  1.$GRN URL must be placed before destination dir name"
 	"$YLW  2.$GRN New dir name may be omitted"
