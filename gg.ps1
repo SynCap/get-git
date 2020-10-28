@@ -12,7 +12,7 @@ Param (
 	[string] $DestDir,
 
 	# Show usage information, describes parameters and swithches
-	[Alias('h','help')]  [Switch] $ShowUsage,
+	[Alias('h','Help')]  [Switch] $ShowUsage,
 	# Turn off depth limitations. See `git help clone --depth`
 	[Alias('d')]         [Switch] $DeepCopy,
 	# Forcibly era destination folder if exists. Git itself do not clone project
