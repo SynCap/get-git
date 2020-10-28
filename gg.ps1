@@ -214,12 +214,13 @@ function Open-Readmes {
 }
 
 function Show-GitLog {
+	$dateFormat = '%d.%m.%Y %H:%M:%S'
+	$prettyString = '%C(auto)%h%d %C(bold blue)%an %Cgreen%ad  %Creset%s'
 
-	git log --graph "--date=format:%d.%m.%Y %H:%M:%S" "--pretty=format:%C(auto)%h%d %C(bold blue)%an %Cgreen%ad  %Creset%s" *
+	git log --graph "--date=format:$dateFormat" "--pretty=format:$prettyString" *
 }
 
 ################################### MAIN
-
 
 if (!$Url) {
 	if ($ShowUsage) {
