@@ -99,6 +99,8 @@ Param (
 		};
 	}
 
+	function local:hr($Ch='-',$Cnt=0-bor[Console]::WindowWidth/2){$Ch*$Cnt}
+
 ###################################### Banner (Logo)
 
 	"$GRN`nGet the Git $DEF[repo]$GRN (Powershell version)"
