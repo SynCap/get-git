@@ -21,7 +21,7 @@ Param (
 	[Alias('Source')]
 	[string] $Url,
 	# Destination directory name
-	[Alias('Dest','o')]
+	[Alias('Dest','Out','o')]
 	[Parameter(Position=1)]
 	[string] $DestDir,
 	# Show usage information, describes parameters and swithches
@@ -36,7 +36,7 @@ Param (
 	[Alias('i')]         [Switch] $InstallPackages,
 	# GG automatically opens README files from cloned project. This switch turns
 	# off this behovoir
-	[Alias('n')]         [Switch] $NoReadme,
+	[Alias('a','Readme','About')]         [Switch] $ShowReadme,
 	# Specify Node package manager to use for install and/or start the scripts.
 	# Yarn specified by default. No checking for installed managers is provided.
 	[Alias('m','Mgr')]
@@ -135,8 +135,8 @@ function Show-Usage {
 	"  -m  specify package manager to use:$WHT yarn$grn,$wht npm$grn"
 	"`n  -EraseExisting,"
 	"  -e $wht Erase$GRN target folder if exists"
-	"`n  -NoReadme,"
-	"  -n $wht NO README$GRN will be shown but found"
+	"`n  -Readme, -ShowReadme, -About,"
+	"  -a $wht NO README$GRN will be shown but found"
 	"`n  -DeepCopy,"
 	"  -d $WHT DEEP$GRN copy, i.e. no$YLW --depth=1$GRN param $RST`n"
 	"$YLW`nExample:$CYN"
@@ -197,7 +197,7 @@ function Open-Readmes {
 	$readmeFiles = Get-ChildItem "readme*" -Recurse -Depth $MaxReadmeSearchDepth | select FullName -First $MaxReadmes
 	$readmeFiles | % {
 		println $CYN,$_.FullName
-		if (!$NoReadme) {
+		if ($ShowReadme) {
 			& $_.FullName
 		}
 	}
