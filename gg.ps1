@@ -100,6 +100,7 @@ Param (
 	}
 
 	function local:hr($Ch='-',$Cnt=0-bor[Console]::WindowWidth/2){$Ch*$Cnt}
+	function println([string[]]$s){[Console]::WriteLine($s -join '')}
 
 ###################################### Banner (Logo)
 
@@ -165,7 +166,7 @@ function Check-DestDir {
 
 function Clone-Repo {
 	"`n$RED■$YLW_ $NewDir$RST"
-	draw (hr `') DarkYellow
+	println $YLW,(hr `')
 	$RST
 	# Collect all params to launch clone job
 	$GitPath = 'git' # (Get-Command git).Source
@@ -188,19 +189,19 @@ function Clone-Repo {
 	"$GitRunCmd`n"
 	# Really launches the cloning
 	& $GitPath $GitRunParams
-	draw (hr `' $HrLength),`n DarkYellow
+	println $YLW,(hr `' $HrLength)
 }
 
 function Open-Readmes {
 	"`n$RED■$YLW_ README files$RST"
 	$readmeFiles = Get-ChildItem "readme*" -Recurse -Depth $MaxReadmeSearchDepth | select FullName -First $MaxReadmes
 	$readmeFiles | % {
-		draw $_.FullName,`n DarkCyan;
+		println $CYN,$_.FullName
 		if (!$NoReadme) {
 			& $_.FullName
 		}
 	}
-	draw (hr `'),`n DarkYellow
+	println $YLW,(hr `')
 }
 
 function Show-GitLog {
