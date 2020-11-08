@@ -15,17 +15,17 @@
 [CmdletBinding(SupportsShouldProcess)]
 Param (
 	# Source repository URL
-	[Parameter (Position=0)]
+	[Parameter (Position = 0)]
 	[ValidateNotNullOrEmpty()]
 	[ValidatePattern("^(git@|https:).*\.git/?$")]
 	[Alias('Source')]
 	[string] $Url,
 	# Destination directory name
-	[Alias('Dest','Out','o')]
-	[Parameter(Position=1)]
+	[Alias('Dest', 'Out', 'o')]
+	[Parameter(Position = 1)]
 	[string] $DestDir,
 	# Show usage information, describes parameters and swithches
-	[Alias('h','Help')]  [Switch] $ShowUsage,
+	[Alias('h', 'Help')]  [Switch] $ShowUsage,
 	# Turn off depth limitations. See `git help clone --depth`
 	[Alias('d')]         [Switch] $DeepCopy,
 	# Forcibly era destination folder if exists. Git itself do not clone project
@@ -36,16 +36,16 @@ Param (
 	[Alias('i')]         [Switch] $InstallPackages,
 	# GG automatically opens README files from cloned project. This switch turns
 	# off this behovoir
-	[Alias('a','Readme','About')]         [Switch] $ShowReadme,
+	[Alias('a', 'Readme', 'About')]         [Switch] $ShowReadme,
 	# Specify Node package manager to use for install and/or start the scripts.
 	# Yarn specified by default. No checking for installed managers is provided.
-	[Alias('m','Mgr')]
-    [ValidateSet('Yarn','NPM')]
-    [String] $PackageManager = "yarn",
-    # If `package.json` in cloned project and `scripts` are specified in it the
-    # GG can launch them. To do this specify all needed to launch scripts in
-    # order to be launched.
-	[Alias('r','Run','Script')]
+	[Alias('m', 'Mgr')]
+	[ValidateSet('Yarn', 'NPM')]
+	[String] $PackageManager = "yarn",
+	# If `package.json` in cloned project and `scripts` are specified in it the
+	# GG can launch them. To do this specify all needed to launch scripts in
+	# order to be launched.
+	[Alias('r', 'Run', 'Script')]
 	[String[]] $RunScripts,
 	# Some projects can contains tons of README.md, README.txt, and so on. To
 	# limit number of files that can be opened this parameter is.
@@ -58,66 +58,66 @@ Param (
 
 ################## Color Constants
 
-	$RST="`e[0m"
-	$DEF="`e[37;40m"
+$RST = "`e[0m"
+$DEF = "`e[37;40m"
 
-	$RED="`e[31;40m"
-	$GRN="`e[32;40m"
-	$YLW="`e[33;40m"
-	$BLU="`e[34;40m"
-	$PPL="`e[35;40m"
-	$CYN="`e[36;40m"
-	$WHT="`e[97;40m"
-	$DGY="`e[90;40m"
+$RED = "`e[31;40m"
+$GRN = "`e[32;40m"
+$YLW = "`e[33;40m"
+$BLU = "`e[34;40m"
+$PPL = "`e[35;40m"
+$CYN = "`e[36;40m"
+$WHT = "`e[97;40m"
+$DGY = "`e[90;40m"
 
-	$RED_="`e[1;31;40m"
-	$GRN_="`e[1;32;40m"
-	$YLW_="`e[1;33;40m"
-	$CYN_="`e[96;40m"
+$RED_ = "`e[1;31;40m"
+$GRN_ = "`e[1;32;40m"
+$YLW_ = "`e[1;33;40m"
+$CYN_ = "`e[96;40m"
 
-	$YLW_RED="`e[1;33;41m"
-	$CYN_RED="`e[1;96;41m"
-	$WHT_RED="`e[1;37;41m"
+$YLW_RED = "`e[1;33;41m"
+$CYN_RED = "`e[1;96;41m"
+$WHT_RED = "`e[1;37;41m"
 
 ################## Global Vars
 
-	$ggName = $MyInvocation.InvocationName
-	$StartDir = (pwd).Path
-	$NewDir = ($DestDir ? $DestDir : $Url.Split('/')[-1].Split('.')[0])
-	$HrLength = [Math]::Min( $Host.UI.RawUI.WindowSize.Width, $GitRunCmd.Length )
+$ggName = $MyInvocation.InvocationName
+$StartDir = (pwd).Path
+$NewDir = ($DestDir ? $DestDir : $Url.Split('/')[-1].Split('.')[0])
+$HrLength = [Math]::Min( $Host.UI.RawUI.WindowSize.Width, $GitRunCmd.Length )
 
-	$IsDebugging = $true
+# $IsDebugging = $true
 
-	$Launch = @{
-		yarn = @{
-			Install = '';
-			Run = '{0}';
-		};
-		npm = @{
-			Install = 'install';
-			Run = 'run {0}';
-		};
-	}
+$Launch = @{
+	yarn = @{
+		Install = '';
+		Run     = '{0}';
+	};
+	npm  = @{
+		Install = 'install';
+		Run     = 'run {0}';
+	};
+}
 
-	function local:hr($Ch='-',$Cnt=0-bor[Console]::WindowWidth/2){$Ch*$Cnt}
-	function println([string[]]$s){[Console]::WriteLine($s -join '')}
+function local:hr($Ch = '-', $Cnt = 0 -bor [Console]::WindowWidth / 2) { $Ch * $Cnt }
+function println([string[]]$s) { [Console]::WriteLine($s -join '') }
 
 ###################################### Banner (Logo)
 
-	"$GRN`nGet the Git $DEF[repo]$GRN (Powershell version)"
-	"©2018-2020, CLosk`n"
+"$GRN`nGet the Git $DEF[repo]$GRN (Powershell version)"
+"©2018-2020, CLosk`n"
 
 ###################################### Functions
 
 function Finish ([int]$ExitCode = 0) {
 	################################### DEBUG
 	################################### Real FINISH
-		cd $StartDir
-		$RST
-		Exit $ExitCode
+	cd $StartDir
+	$RST
+	Exit $ExitCode
 }
 
-function Show-Usage {
+function local:ShowUsage {
 	"$GRN`nClone remote Git project to specified dir in shallow manner,"
 	"then show$YLW README$GRN files, then install$YLW NPMs$GRN, and start it"
 	"if you're ask for that. Whants to be a friend for JS people$YLW_ :)$GRN"
@@ -147,26 +147,27 @@ function Show-Usage {
 	"$YLW  3.$GRN The placements of the other switches does not matter$RST"
 }
 
-function ConfirmEraseDest {
+function local:hrConfirmEraseDest {
 	$ask = "$YLW_RED Warning! $WHT_RED Folder $CYN_RED$NewDir$WHT_RED seems alive! `n$RST"
 	$ask += "Are you sure you whant to erase existing folder? [$($YLW)y$RST/N]"
-	Return [bool]( (read-host $ask) -eq 'y' )
+	Return [bool]( (Read-Host $ask) -eq 'y' )
 }
 
-function Check-DestDir {
+function local:CheckDestDir {
 	if ( Test-Path -LiteralPath "$NewDir" ) {
 		if ($EraseExisting -or $( ConfirmEraseDest)) {
 			rmr $NewDir
-		} else {
+		}
+		else {
 			"User requested Exit"
 			Finish -1
 		}
 	}
 }
 
-function Clone-Repo {
+function local:CloneRepo {
 	"`n$RED■$YLW_ $NewDir$RST"
-	println $YLW,(hr `')
+	println $YLW, (hr `')
 	$RST
 	# Collect all params to launch clone job
 	$GitPath = 'git' # (Get-Command git).Source
@@ -181,30 +182,30 @@ function Clone-Repo {
 	$GitRunParams += $Url
 	if ($DestDir) {
 		$GitRunParams += $DestDir -Match ' ' ?
-			"`"$DestDir`"" :
-			$DestDir
+		"`"$DestDir`"" :
+		$DestDir
 	}
 	# Just shows command line as how it may composed manually
-	$GitRunCmd = $GitPath,($GitRunParams -join ' ') -join ' '
+	$GitRunCmd = $GitPath, ($GitRunParams -join ' ') -join ' '
 	"$GitRunCmd`n"
 	# Really launches the cloning
 	& $GitPath $GitRunParams
-	println $YLW,(hr `' $HrLength)
+	println $YLW, (hr `' $HrLength)
 }
 
-function Open-Readmes {
+function local:OpenReadmes {
 	"`n$RED■$YLW_ README files$RST"
 	$readmeFiles = Get-ChildItem "readme*" -Recurse -Depth $MaxReadmeSearchDepth | select FullName -First $MaxReadmes
 	$readmeFiles | % {
-		println $CYN,$_.FullName
+		println $CYN, $_.FullName
 		if ($ShowReadme) {
 			& $_.FullName
 		}
 	}
-	println $YLW,(hr `')
+	println $YLW, (hr `')
 }
 
-function Show-GitLog {
+function local:ShowGitLog {
 	$dateFormat = '%d.%m.%Y %H:%M:%S'
 	$prettyString = '%C(auto)%h%d %C(bold blue)%an %Cgreen%ad  %Creset%s'
 	git log --graph "--date=format:$dateFormat" "--pretty=format:$prettyString" *
@@ -214,8 +215,9 @@ function Show-GitLog {
 
 if (!$Url) {
 	if ($ShowUsage) {
-		Show-Usage
-	} else {
+		ShowUsage
+	}
+ else {
 		"To get informed about the launch parameters please use:"
 		"$wht> $ggName$dgy -Help$grn"
 		"    or"
@@ -224,14 +226,14 @@ if (!$Url) {
 	Finish 1
 }
 
-Check-DestDir
-Clone-Repo
+CheckDestDir
+CloneRepo
 
 if ( Test-Path -LiteralPath "$NewDir" ) {
 	"Change dir to $WHT$NewDir$RST"
-	pushd $NewDir
-	Show-GitLog
-	Open-Readmes
+	Push-Location $NewDir
+	ShowGitLog
+	OpenReadmes
 	if (Test-Path -LiteralPath 'package.json') {
 		"Found$YLW package.json$RST"
 	}
@@ -241,20 +243,21 @@ if (Test-Path 'package.json') {
 	if ($InstallPackages) {
 		"`nInstallation was requested. Prepare:$WHT $PackageManager$YLW $($Launch[$PackageManager].Install)$RST"
 		& $PackageManager $($Launch[$PackageManager].Install)
-		Write-Host (hr `'),"`n" -Foreground DarkYellow
+		Write-Host (hr `'), "`n" -Foreground DarkYellow
 	}
 	if ($RunScripts.Count) {
 		"Ordered to launch the$wht $($RunScripts.Count)$rst scripts."
 		$PkgScripts = (Get-Content 'package.json' | ConvertFrom-Json -AsHashtable).scripts
-		$RunScripts.ForEach({
-			"`n$RED■$WHT $PackageManager$YLW $($Launch[$PackageManager].Run -f $_)$RST"
-			"$YLW$(hr `')$RST"
-			if (!$PkgScripts[$_]) {
-				"$YLW_RED $_$WHT_RED not found in$YLW_RED package.json $RST"
-			} else {
-				& $PackageManager ($Launch[$PackageManager].Run -f $_).Split(' ')
-			}
-		})
+		$RunScripts.ForEach( {
+				"`n$RED■$WHT $PackageManager$YLW $($Launch[$PackageManager].Run -f $_)$RST"
+				"$YLW$(hr `')$RST"
+				if (!$PkgScripts[$_]) {
+					"$YLW_RED $_$WHT_RED not found in$YLW_RED package.json $RST"
+				}
+				else {
+					& $PackageManager ($Launch[$PackageManager].Run -f $_).Split(' ')
+				}
+			})
 	}
 }
 
