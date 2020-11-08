@@ -12,7 +12,7 @@
 	https://github.com/SynCap/get-git.git
 
 #>
-
+[CmdletBinding(SupportsShouldProcess)]
 Param (
 	# Source repository URL
 	[Parameter (Position=0)]
