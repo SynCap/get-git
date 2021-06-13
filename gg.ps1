@@ -60,21 +60,21 @@ Param (
 ################## Color Constants
 
 $RST = "`e[0m"
-$DEF = "`e[37;40m"
+$DEF = "`e[37m"
 
-$RED = "`e[31;40m"
-$GRN = "`e[32;40m"
-$YLW = "`e[33;40m"
-$BLU = "`e[34;40m"
-$PPL = "`e[35;40m"
-$CYN = "`e[36;40m"
-$WHT = "`e[97;40m"
-$DGY = "`e[90;40m"
+$RED = "`e[31m"
+$GRN = "`e[32m"
+$YLW = "`e[33m"
+$BLU = "`e[34m"
+$PPL = "`e[35m"
+$CYN = "`e[36m"
+$WHT = "`e[97m"
+$DGY = "`e[90m"
 
-$RED_ = "`e[1;31;40m"
-$GRN_ = "`e[1;32;40m"
-$YLW_ = "`e[1;33;40m"
-$CYN_ = "`e[96;40m"
+$RED_ = "`e[1;31m"
+$GRN_ = "`e[1;32m"
+$YLW_ = "`e[1;33m"
+$CYN_ = "`e[96m"
 
 $YLW_RED = "`e[1;33;41m"
 $CYN_RED = "`e[1;96;41m"
@@ -83,7 +83,7 @@ $WHT_RED = "`e[1;37;41m"
 ################## Global Vars
 
 $ggName = $MyInvocation.InvocationName
-$StartDir = (pwd).Path
+$StartDir = $PWD.Path
 $NewDir = ($DestDir ? $DestDir : $Url.Split('/')[-1].Split('.')[0])
 $HrLength = [Math]::Min( $Host.UI.RawUI.WindowSize.Width, $GitRunCmd.Length )
 
@@ -106,7 +106,8 @@ function println([string[]]$s) { [Console]::WriteLine($s -join '') }
 ###################################### Banner (Logo)
 
 "$GRN`nGet the Git $DEF[repo]$GRN (Powershell version)"
-"©2018-2020, CLosk`n"
+"©2018-2021, CLosk"
+"https://github.com/syncap/get-git`n"
 
 ###################################### Functions
 
