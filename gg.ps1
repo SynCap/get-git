@@ -122,7 +122,8 @@ function println([string[]]$s) { [Console]::WriteLine($s -join '') }
 ###################################### Banner (Logo)
 
 "$GRN`nGet the Git $DEF[repo]$GRN (Powershell version)"
-"©2018-2020, CLosk`n"
+"©2018-2021, CLosk"
+"https://github.com/syncap/get-git`n"
 
 ###################################### Functions
 
