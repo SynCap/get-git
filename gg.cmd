@@ -1,3 +1,3 @@
 @echo off
 
-bash gg.sh
+pwsh.exe -c gg.ps1 %*
