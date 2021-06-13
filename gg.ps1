@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 <<<<<<< Updated upstream
+=======
+>>>>>>> 528b5dd8963732c3392fbe8b0918b8e9154fa852
 <#
 .Description
 
@@ -13,7 +16,11 @@
 	https://github.com/SynCap/get-git.git
 
 #>
+<<<<<<< HEAD
 [CmdletBinding(SupportsShouldProcess)]
+=======
+
+>>>>>>> 528b5dd8963732c3392fbe8b0918b8e9154fa852
 Param (
 	# Source repository URL
 	[Parameter (Position = 0)]
@@ -21,6 +28,7 @@ Param (
 	[ValidatePattern("^(git@|https:).*\.git/?$")]
 	[Alias('Source')]
 	[string] $Url,
+<<<<<<< HEAD
 	# Destination directory name
 	[Alias('Dest', 'Out', 'o')]
 	[Parameter(Position = 1)]
@@ -288,6 +296,8 @@ Param (
 	[ValidatePattern("^(git@[^:]+:.*\.git|https://.*/?)$")]
 	[Alias('Source')]
 	[string] $Url,
+=======
+>>>>>>> 528b5dd8963732c3392fbe8b0918b8e9154fa852
 	# Destination directory name
 	[Alias('Dest','Out','o')]
 	[Parameter(Position=1)]
@@ -380,7 +390,11 @@ Param (
 function Finish ([int]$ExitCode = 0) {
 	################################### DEBUG
 	################################### Real FINISH
+<<<<<<< HEAD
 		# Set-Location $StartDir
+=======
+		cd $StartDir
+>>>>>>> 528b5dd8963732c3392fbe8b0918b8e9154fa852
 		$RST
 		Exit $ExitCode
 }
@@ -462,14 +476,23 @@ function CloneRepo {
 
 function OpenReadmes {
 	"`n$RED■$YLW_ README files$RST"
+<<<<<<< HEAD
 	$readmeFiles = Get-ChildItem "readme*" -Recurse -Depth $MaxReadmeSearchDepth | Select-Object FullName -First $MaxReadmes
 	$readmeFiles | ForEach-Object {
+=======
+	$readmeFiles = Get-ChildItem "readme*" -Recurse -Depth $MaxReadmeSearchDepth | select FullName -First $MaxReadmes
+	$readmeFiles | % {
+>>>>>>> 528b5dd8963732c3392fbe8b0918b8e9154fa852
 		println $CYN,$_.FullName
 		if ($ShowReadme) {
 			& $_.FullName
 		}
 	}
+<<<<<<< HEAD
 	println $YLW,(hr "`'")
+=======
+	println $YLW,(hr `')
+>>>>>>> 528b5dd8963732c3392fbe8b0918b8e9154fa852
 }
 
 function ShowGitLog {
@@ -497,9 +520,15 @@ CloneRepo
 
 if ( Test-Path -LiteralPath "$NewDir" ) {
 	"Change dir to $WHT$NewDir$RST"
+<<<<<<< HEAD
 	Set-Location $NewDir
 	ShowGitLog
 	OpenReadmes
+=======
+	pushd $NewDir
+	Show-GitLog
+	Open-Readmes
+>>>>>>> 528b5dd8963732c3392fbe8b0918b8e9154fa852
 	if (Test-Path -LiteralPath 'package.json') {
 		"Found$YLW package.json$RST"
 	}
@@ -516,7 +545,11 @@ if (Test-Path 'package.json') {
 		$PkgScripts = (Get-Content 'package.json' | ConvertFrom-Json -AsHashtable).scripts
 		$RunScripts.ForEach({
 			"`n$RED■$WHT $PackageManager$YLW $($Launch[$PackageManager].Run -f $_)$RST"
+<<<<<<< HEAD
 			"$YLW$(hr "`'")$RST"
+=======
+			"$YLW$(hr `')$RST"
+>>>>>>> 528b5dd8963732c3392fbe8b0918b8e9154fa852
 			if (!$PkgScripts[$_]) {
 				"$YLW_RED $_$WHT_RED not found in$YLW_RED package.json $RST"
 			} else {
