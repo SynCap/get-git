@@ -13,7 +13,10 @@
 
 #>
 
-[CmdletBinding(SupportsShouldProcess)]
+[CmdletBinding(
+	ConfirmImpact = 'Medium',
+	SupportsShouldProcess = $true
+)]
 
 Param (
 	# Source repository URL
@@ -103,7 +106,22 @@ $StartDir = $PWD.Path
 $NewDir = ($DestDir ? $DestDir : $Url.Split('/')[-1].Split('.')[0])
 $HrLength = [Math]::Min( $Host.UI.RawUI.WindowSize.Width, $GitRunCmd.Length )
 
-# $IsDebugging = $true
+$DBG_INFO              = @{
+	'Url'                  = $Url;
+	'DestDir'              = $DestDir;
+	'ShowUsage'            = $ShowUsage;
+	'DeepCopy'             = $DeepCopy;
+	'EraseExisting'        = $EraseExisting;
+	'InstallPackages'      = $InstallPackages;
+	'ShowReadme'           = $ShowReadme;
+	'PackageManager'       = $PackageManager
+	'RunScripts'           = $RunScripts;
+	'MaxReadmes'           = $MaxReadmes;
+	'MaxReadmeSearchDepth' = $MaxReadmeSearchDepth
+}
+
+if ($Verbose) {$VerbosePreference = "Continue"}
+if ($Debug) {$DebugPreference = "Continue"}
 
 $Launch = @{
 	yarn = @{
@@ -127,11 +145,18 @@ function println([string[]]$s) { [Console]::WriteLine($s -join '') }
 
 ###################################### Functions
 
-function Finish ([int]$ExitCode = 0) {
+function Finish ([int]$ExitCode = 0, [String] $ExitMesage) {
 	################################### DEBUG
+	if ($Debug) {
+		Write-Debug "Values of key params"
+		$DBG_INFO
+	}
 	################################### Real FINISH
 	# Set-Location $StartDir
 	$RST
+	if ($ExitMesage) {
+		Write-Error $ExitMesage
+	}
 	Exit $ExitCode
 }
 
@@ -152,13 +177,18 @@ function ShowUsage {
 	"`n  -PackageManager,"
 	"  -m  specify package manager to use:$WHT yarn$grn,$wht npm$grn"
 	"`n  -EraseExisting,"
-	"  -e $wht Erase$GRN target folder if exists"
+	"  -e $($wht)Erase$GRN target folder if exists"
 	"`n  -Readme, -ShowReadme, -About,"
-	"  -a $wht NO README$GRN will be shown but found"
+	"  -a $($wht)README$GRN will be shown otherway found only"
 	"`n  -DeepCopy,"
-	"  -d $WHT DEEP$GRN copy, i.e. no$YLW --depth=1$GRN param $RST`n"
+	"  -d $($WHT)DEEP$GRN copy, i.e. no$YLW --depth=1$GRN param $RST`n"
+	"`n  -MaxReadmes"
+    "     Maximum number of **README** files to be searched for and opened"
+	"`n  -MaxReadmeSearchDepth"
+    "	   How deep to dig into directory structure when search for"
+	"      **README** files"
 	"$YLW`nExample:$CYN"
-	"$WHT  $ggName$CYN_ https://github.com/SynCap/get-git.git$wht -NoReadme$CYN ``"
+	"$WHT  $ggName$CYN_ https://github.com/SynCap/get-git.git$wht -ShowReadme$CYN ``"
 	"      '~Get The GIT'$wht -e -i -r$dgy test,build$wht -m$dgy npm$RST`n"
 	"$YLW  1.$GRN URL must be placed before destination dir name"
 	"$YLW  2.$GRN New dir name may be omitted"
@@ -229,55 +259,82 @@ function ShowGitLog {
 	git log --graph "--date=format:$dateFormat" "--pretty=format:$prettyString" *
 }
 
-################################### MAIN
-
-if (!$Url) {
-	if ($ShowUsage) {
-		ShowUsage
-	}
- else {
-		"To get informed about the launch parameters please use:"
-		"$wht> $ggName$dgy -Help$grn"
-		"    or"
-		"$wht> Get-Help$dgy $ggName$def`n"
-	}
-	Finish 1
-}
-
-CheckDestDir
-CloneRepo
-
-if ( Test-Path -LiteralPath "$NewDir" ) {
-	"Change dir to $WHT$NewDir$RST"
-	Push-Location $NewDir
-	ShowGitLog
-	OpenReadmes
-	if (Test-Path -LiteralPath 'package.json') {
-		"Found$YLW package.json$RST"
+function CheckURL {
+	if (!$Url) {
+		if ($ShowUsage) {
+			ShowUsage
+		}
+		else {
+			"To get informed about the launch parameters please use:"
+			"$wht> $ggName$dgy -Help$grn"
+			"    or"
+			"$wht> Get-Help$dgy $ggName$def`n"
+		}
+		Finish
 	}
 }
 
-if (Test-Path 'package.json') {
-	if ($InstallPackages) {
+function InstallPackages {
 		"`nInstallation was requested. Prepare:$WHT $PackageManager$YLW $($Launch[$PackageManager].Install)$RST"
 		& $PackageManager $($Launch[$PackageManager].Install)
 		"$YLW$(hr `')$RST"
-	}
+}
+
+function RunPackageScripts {
 	if ($RunScripts.Count) {
 		"Ordered to launch the$wht $($RunScripts.Count)$rst scripts."
 		$PkgScripts = (Get-Content 'package.json' | ConvertFrom-Json -AsHashtable).scripts
 		$RunScripts.ForEach( {
-				"`n$RED■$WHT $PackageManager$YLW $($Launch[$PackageManager].Run -f $_)$RST"
-				"$YLW$(hr `')$RST"
-				if (!$PkgScripts[$_]) {
-					"$YLW_RED $_$WHT_RED not found in$YLW_RED package.json $RST"
-				}
-				else {
-					& $PackageManager ($Launch[$PackageManager].Run -f $_).Split(' ')
-				}
-			})
+			"`n$RED■$WHT $PackageManager$YLW $($Launch[$PackageManager].Run -f $_)$RST"
+			"$YLW$(hr `')$RST"
+			if ($PkgScripts.ContainsKey($_)) {
+				& $PackageManager ($Launch[$PackageManager].Run -f $_).Split(' ')
+			}
+			else {
+				"$YLW_RED $_ $WHT_RED not found in $YLW_RED package.json $RST"
+			}
+		})
 	}
 }
+
+function DealPackageJson {
+	if (Test-Path 'package.json') {
+		"Found$YLW package.json$RST"
+		if ($InstallPackages) {
+			InstallPackages
+		}
+		RunPackageScripts
+	} else {
+		"${YLW}package.json${RST} is $YLW_RED NOT $RST found!"
+	}
+}
+
+function ProcessRepo {
+	if ( Test-Path -LiteralPath "$NewDir" ) {
+		"Change dir to $WHT$NewDir$RST"
+		Push-Location $NewDir
+
+		$IsInNewDir = $NewDir -eq ($PWD -replace '^.*\\','')
+		Write-Debug "DestDir: $NewDir"
+		Write-Debug "PWD: $PWD"
+		Write-Debug "IsInNewDir: $IsInNewDir"
+		"New dir is $($IsInNewDir ? '' : "$($WHT_RED)NOT$RST") set to Dest"
+		if($IsInNewDir) {
+			ShowGitLog
+			OpenReadmes
+			DealPackageJson
+		} else {Finish 1}
+
+	} else {Finish 2}
+}
+
+################################### MAIN
+
+CheckURL
+CheckDestDir
+CloneRepo
+ProcessRepo
+DealPackageJson
 
 ################################### That's All Folsk!
 
