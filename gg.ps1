@@ -1,3 +1,4 @@
+# [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")]
 <#
 .Description
 
@@ -57,8 +58,8 @@ Param (
 	# Specify Node package manager to use for install and/or start the scripts.
 	# Yarn specified by default. No checking for installed managers is provided.
 	[Alias('m', 'Mgr')]
-	[ValidateSet('Yarn', 'NPM')]
-	[String] $PackageManager = "yarn",
+	[ValidateSet('Yarn', 'NPM', 'PNPM')]
+	[String] $PackageManager = 'pnpm',
 
 	# If `package.json` in cloned project and `scripts` are specified in it the
 	# GG can launch them. To do this specify all needed to launch scripts in
@@ -77,21 +78,20 @@ Param (
 )
 
 ################## Color Constants
-
 $RST = "`e[0m"
 $DEF = "`e[37m"
 
 $RED = "`e[31m"
 $GRN = "`e[32m"
 $YLW = "`e[33m"
-$BLU = "`e[34m"
-$PPL = "`e[35m"
+# $BLU = "`e[34m"
+# $PPL = "`e[35m"
 $CYN = "`e[36m"
 $WHT = "`e[97m"
 $DGY = "`e[90m"
 
-$RED_ = "`e[1;31m"
-$GRN_ = "`e[1;32m"
+# $RED_ = "`e[1;31m"
+# $GRN_ = "`e[1;32m"
 $YLW_ = "`e[1;33m"
 $CYN_ = "`e[96m"
 
@@ -102,7 +102,7 @@ $WHT_RED = "`e[1;37;41m"
 ################## Global Vars
 
 $ggName = $MyInvocation.InvocationName
-$StartDir = $PWD.Path
+# $StartDir = $PWD.Path
 $NewDir = ($DestDir ? $DestDir : $Url.Split('/')[-1].Split('.')[0])
 $HrLength = [Math]::Min( $Host.UI.RawUI.WindowSize.Width, $GitRunCmd.Length )
 
@@ -129,6 +129,10 @@ $Launch = @{
 		Run     = '{0}';
 	};
 	npm  = @{
+		Install = 'install';
+		Run     = 'run {0}';
+	};
+	pnpm  = @{
 		Install = 'install';
 		Run     = 'run {0}';
 	};
@@ -183,9 +187,9 @@ function ShowUsage {
 	"`n  -DeepCopy,"
 	"  -d $($WHT)DEEP$GRN copy, i.e. no$YLW --depth=1$GRN param $RST`n"
 	"`n  -MaxReadmes"
-    "     Maximum number of **README** files to be searched for and opened"
+	"     Maximum number of **README** files to be searched for and opened"
 	"`n  -MaxReadmeSearchDepth"
-    "	   How deep to dig into directory structure when search for"
+	"	   How deep to dig into directory structure when search for"
 	"      **README** files"
 	"$YLW`nExample:$CYN"
 	"$WHT  $ggName$CYN_ https://github.com/SynCap/get-git.git$wht -ShowReadme$CYN ``"
