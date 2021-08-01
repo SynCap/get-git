@@ -28,7 +28,7 @@ Param (
 	[string] $Url,
 
 	# Destination directory name
-	[Alias('Dest', 'Out', 'o')]
+	[Alias('Dest')]
 	[Parameter(Position = 1)]
 	[string] $DestDir,
 
@@ -55,10 +55,19 @@ Param (
 	[Alias('a', 'Readme', 'About')]
 	[Switch] $ShowReadme,
 
+	# Set editor to open README files If not set $Env:EDITOR will be used.
+	# If $Env:Editor is not set then default shell command will executed
+	# First element of array -- editor itself, rest -- arguments to launch
+	# Argument equal to `%%%` will be replaced with list of files to open
+	# joined by space. If no `%%%` member is specified list of files will be
+	# insert at end of command.
+	[Alias('o')]
+	[String[]] $OpenReadmeWith,
+
 	# Specify Node package manager to use for install and/or start the scripts.
 	# Yarn specified by default. No checking for installed managers is provided.
 	[Alias('m', 'Mgr')]
-	[ValidateSet('Yarn', 'NPM', 'PNPM')]
+	[ValidateSet('yarn', 'npm', 'pnpm')]
 	[String] $PackageManager = 'pnpm',
 
 	# If `package.json` in cloned project and `scripts` are specified in it the
@@ -117,8 +126,12 @@ $DBG_INFO              = @{
 	'PackageManager'       = $PackageManager
 	'RunScripts'           = $RunScripts;
 	'MaxReadmes'           = $MaxReadmes;
-	'MaxReadmeSearchDepth' = $MaxReadmeSearchDepth
+	'MaxReadmeSearchDepth' = $MaxReadmeSearchDepth;
+	'OpenReadmeWith'       = $OpenReadmeWith
 }
+# hr
+# $DBG_INFO
+# hr
 
 if ($Verbose) {$VerbosePreference = "Continue"}
 if ($Debug) {$DebugPreference = "Continue"}
@@ -248,11 +261,30 @@ function CloneRepo {
 function OpenReadmes {
 	"`n$RED■$YLW_ README files$RST"
 	$readmeFiles = Get-ChildItem "readme*" -Recurse -Depth $MaxReadmeSearchDepth | Select-Object FullName -First $MaxReadmes
+	$filesToOpen = @();
 	$readmeFiles | ForEach-Object {
-		println $CYN, $_.FullName
-		if ($ShowReadme) {
-			& $_.FullName
+		$fn = Resolve-Path $_.Fullname -Relative
+		$filesToOpen += $fn
+		println $CYN, $fn
+	}
+	if ($ShowReadme) {
+		if ($OpenReadmeWith.Length) {
+			$Editor = $OpenReadmeWith[0];
+			if ($OpenReadmeWith.Contains('%%%')) {
+				$OpenReadmeWith[$OpenReadmeWith.IndexOf('%%%')] = $filesToOpen -join ' ';
+			}
+			$EditorArgs = $OpenReadmeWith[1,-1] + $filesToOpen
+		} elseif (Test-Path (Get-Command $env:EDITOR).Source) {
+			$Editor = $env:EDITOR;
+			$EditorArgs = $filesToOpen
 		}
+		if($Editor){
+			Start-Process $Editor -ArgumentList $EditorArgs -WorkingDirectory $PWD.Path
+		} else {
+			$filesToOpen.ForEach({. $_})
+		}
+		Write-Debug "Editor: `e[7m $Editor `e[0m"
+		Write-Debug "EditorArgs: `e[7m $EditorArgs `e[0m"
 	}
 	println $YLW, (hr `')
 }
