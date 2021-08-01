@@ -87,26 +87,27 @@ Param (
 )
 
 ################## Color Constants
-$RST = "`e[0m"
-$DEF = "`e[37m"
 
-$RED = "`e[31m"
-$GRN = "`e[32m"
-$YLW = "`e[33m"
-# $BLU = "`e[34m"
-# $PPL = "`e[35m"
-$CYN = "`e[36m"
-$WHT = "`e[97m"
-$DGY = "`e[90m"
+	$RST = "`e[0m"
+	$DEF = "`e[37m"
 
-# $RED_ = "`e[1;31m"
-# $GRN_ = "`e[1;32m"
-$YLW_ = "`e[1;33m"
-$CYN_ = "`e[96m"
+	$RED = "`e[31m"
+	$GRN = "`e[32m"
+	$YLW = "`e[33m"
+	# $BLU = "`e[34m"
+	# $PPL = "`e[35m"
+	$CYN = "`e[36m"
+	$WHT = "`e[97m"
+	$DGY = "`e[90m"
 
-$YLW_RED = "`e[1;33;41m"
-$CYN_RED = "`e[1;96;41m"
-$WHT_RED = "`e[1;37;41m"
+	# $RED_ = "`e[1;31m"
+	# $GRN_ = "`e[1;32m"
+	$YLW_ = "`e[1;33m"
+	$CYN_ = "`e[96m"
+
+	$YLW_RED = "`e[1;33;41m"
+	$CYN_RED = "`e[1;96;41m"
+	$WHT_RED = "`e[1;37;41m"
 
 ################## Global Vars
 
@@ -212,9 +213,9 @@ function ShowUsage {
 	"$YLW  3.$GRN The placements of the other switches does not matter$RST"
 }
 
-function hrConfirmEraseDest {
+function ConfirmEraseDest {
 	$ask = "$YLW_RED Warning! $WHT_RED Folder $CYN_RED$NewDir$WHT_RED seems alive! `n$RST"
-	$ask += "Are you sure you whant to erase existing folder? [$($YLW)y$RST/N]"
+	$ask += "$RST`Are you sure you whant to erase existing folder? [$($YLW)y$RST/N]"
 	Return [bool]( (Read-Host $ask) -eq 'y' )
 }
 
@@ -310,7 +311,7 @@ function CheckURL {
 	}
 }
 
-function InstallPackages {
+function DoInstallPackages {
 		"`nInstallation was requested. Prepare:$WHT $PackageManager$YLW $($Launch[$PackageManager].Install)$RST"
 		& $PackageManager $($Launch[$PackageManager].Install)
 		"$YLW$(hr `')$RST"
@@ -337,7 +338,7 @@ function DealPackageJson {
 	if (Test-Path 'package.json') {
 		"Found$YLW package.json$RST"
 		if ($InstallPackages) {
-			InstallPackages
+			DoInstallPackages
 		}
 		RunPackageScripts
 	} else {
@@ -370,7 +371,6 @@ CheckURL
 CheckDestDir
 CloneRepo
 ProcessRepo
-DealPackageJson
 
 ################################### That's All Folsk!
 
