@@ -220,7 +220,7 @@ function ConfirmEraseDest {
 }
 
 function CheckDestDir {
-	if ( Test-Path -LiteralPath "$NewDir" ) {
+	if ( ( Test-Path -LiteralPath "$NewDir" ) -and (Resolve-Path $NewDir) -ne $PWD ) {
 		if ($EraseExisting -or $( ConfirmEraseDest)) {
 			rmr $NewDir
 		}
