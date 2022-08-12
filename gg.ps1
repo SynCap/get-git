@@ -28,7 +28,7 @@ Param (
 	[string] $Url,
 
 	# Destination directory name
-	[Alias('Dest', 'Out', 'o')]
+	[Alias('Dest')]
 	[Parameter(Position = 1)]
 	[string] $DestDir,
 
@@ -55,10 +55,19 @@ Param (
 	[Alias('a', 'Readme', 'About')]
 	[Switch] $ShowReadme,
 
+	# Set editor to open README files If not set $Env:EDITOR will be used.
+	# If $Env:Editor is not set then default shell command will executed
+	# First element of array -- editor itself, rest -- arguments to launch
+	# Argument equal to `%%%` will be replaced with list of files to open
+	# joined by space. If no `%%%` member is specified list of files will be
+	# insert at end of command.
+	[Alias('o')]
+	[String[]] $OpenReadmeWith,
+
 	# Specify Node package manager to use for install and/or start the scripts.
 	# Yarn specified by default. No checking for installed managers is provided.
 	[Alias('m', 'Mgr')]
-	[ValidateSet('Yarn', 'NPM', 'PNPM')]
+	[ValidateSet('yarn', 'npm', 'pnpm')]
 	[String] $PackageManager = 'pnpm',
 
 	# If `package.json` in cloned project and `scripts` are specified in it the
@@ -78,74 +87,83 @@ Param (
 )
 
 ################## Color Constants
-$RST = "`e[0m"
-$DEF = "`e[37m"
 
-$RED = "`e[31m"
-$GRN = "`e[32m"
-$YLW = "`e[33m"
-# $BLU = "`e[34m"
-# $PPL = "`e[35m"
-$CYN = "`e[36m"
-$WHT = "`e[97m"
-$DGY = "`e[90m"
+	$RST = "`e[0m"
+	$DEF = "`e[37m"
+	$INV = "`e[7m"
 
-# $RED_ = "`e[1;31m"
-# $GRN_ = "`e[1;32m"
-$YLW_ = "`e[1;33m"
-$CYN_ = "`e[96m"
+	$RED = "`e[31m"
+	$GRN = "`e[32m"
+	$YLW = "`e[33m"
+	# $BLU = "`e[34m"
+	# $PPL = "`e[35m"
+	$CYN = "`e[36m"
+	$WHT = "`e[97m"
+	$DGY = "`e[90m"
 
-$YLW_RED = "`e[1;33;41m"
-$CYN_RED = "`e[1;96;41m"
-$WHT_RED = "`e[1;37;41m"
+	# $RED_ = "`e[1;31m"
+	# $GRN_ = "`e[1;32m"
+	$YLW_ = "`e[1;33m"
+	$CYN_ = "`e[96m"
+
+	$YLW_RED = "`e[103;41m"
+	$CYN_RED = "`e[106;41m"
+	$WHT_RED = "`e[107;41m"
 
 ################## Global Vars
 
-$ggName = $MyInvocation.InvocationName
-# $StartDir = $PWD.Path
-$NewDir = ($DestDir ? $DestDir : $Url.Split('/')[-1].Split('.')[0])
-$HrLength = [Math]::Min( $Host.UI.RawUI.WindowSize.Width, $GitRunCmd.Length )
+	$ggName = $MyInvocation.InvocationName
+	# $StartDir = $PWD.Path
+	$NewDir = ($DestDir ? $DestDir : $Url.Split('/')[-1].Split('.')[0])
+	$HrLength = [Math]::Min( $Host.UI.RawUI.WindowSize.Width, $GitRunCmd.Length )
 
-$DBG_INFO              = @{
-	'Url'                  = $Url;
-	'DestDir'              = $DestDir;
-	'ShowUsage'            = $ShowUsage;
-	'DeepCopy'             = $DeepCopy;
-	'EraseExisting'        = $EraseExisting;
-	'InstallPackages'      = $InstallPackages;
-	'ShowReadme'           = $ShowReadme;
-	'PackageManager'       = $PackageManager
-	'RunScripts'           = $RunScripts;
-	'MaxReadmes'           = $MaxReadmes;
-	'MaxReadmeSearchDepth' = $MaxReadmeSearchDepth
-}
+	$DBG_INFO              = @{
+		'Url'                  = $Url;
+		'DestDir'              = $DestDir;
+		'ShowUsage'            = $ShowUsage;
+		'DeepCopy'             = $DeepCopy;
+		'EraseExisting'        = $EraseExisting;
+		'InstallPackages'      = $InstallPackages;
+		'ShowReadme'           = $ShowReadme;
+		'PackageManager'       = $PackageManager
+		'RunScripts'           = $RunScripts;
+		'MaxReadmes'           = $MaxReadmes;
+		'MaxReadmeSearchDepth' = $MaxReadmeSearchDepth;
+		'OpenReadmeWith'       = $OpenReadmeWith
+	}
+	# hr
+	# $DBG_INFO
+	# hr
 
-if ($Verbose) {$VerbosePreference = "Continue"}
-if ($Debug) {$DebugPreference = "Continue"}
+	if ($Verbose) {$VerbosePreference = "Continue"}
+	if ($Debug) {$DebugPreference = "Continue"}
 
-$Launch = @{
-	yarn = @{
-		Install = '';
-		Run     = '{0}';
-	};
-	npm  = @{
-		Install = 'install';
-		Run     = 'run {0}';
-	};
-	pnpm  = @{
-		Install = 'install';
-		Run     = 'run {0}';
-	};
-}
+	$Launch = @{
+		yarn = @{
+			Install = '';
+			Run     = '{0}';
+		};
+		npm  = @{
+			Install = 'install';
+			Run     = 'run {0}';
+		};
+		pnpm  = @{
+			Install = 'install';
+			Run     = 'run {0}';
+		};
+	}
 
-function hr($Ch = '-', $Cnt = 0 -bor [Console]::WindowWidth / 2) { $Ch * $Cnt }
-function println([string[]]$s) { [Console]::WriteLine($s -join '') }
+	function hr($Ch = '-', $Cnt = 0 -bor [Console]::WindowWidth / 2) { $Ch * $Cnt }
+	function println([string[]]$s) { [Console]::WriteLine($s -join '') }
+	function fmtDebug([String]$msg,[String]$value,[String]$color=$INV){
+		$msg + ($value ? ":{2} {1} $RST" -f $value,$color : '')
+	}
 
 ###################################### Banner (Logo)
 
-"$GRN`nGet the Git $DEF[repo]$GRN (Powershell version)"
-"©2018-2021, CLosk"
-"https://github.com/syncap/get-git`n"
+	"$GRN`nGet the Git $DEF[repo]$GRN (Powershell version)"
+	"©2018-2021, CLosk"
+	"https://github.com/syncap/get-git`n"
 
 ###################################### Functions
 
@@ -199,14 +217,14 @@ function ShowUsage {
 	"$YLW  3.$GRN The placements of the other switches does not matter$RST"
 }
 
-function hrConfirmEraseDest {
-	$ask = "$YLW_RED Warning! $WHT_RED Folder $CYN_RED$NewDir$WHT_RED seems alive! `n$RST"
-	$ask += "Are you sure you whant to erase existing folder? [$($YLW)y$RST/N]"
+function ConfirmEraseDest {
+	$ask = "$RST$YLW_RED Warning! $WHT_RED Folder $CYN_RED$NewDir$WHT_RED seems alive! `n$RST"
+	$ask += "$RST`Are you sure you whant to erase existing folder? [$($YLW)y$RST/N]"
 	Return [bool]( (Read-Host $ask) -eq 'y' )
 }
 
 function CheckDestDir {
-	if ( Test-Path -LiteralPath "$NewDir" ) {
+	if ( ( Test-Path -LiteralPath "$NewDir" ) -and (Resolve-Path $NewDir) -ne $PWD ) {
 		if ($EraseExisting -or $( ConfirmEraseDest)) {
 			rmr $NewDir
 		}
@@ -248,11 +266,30 @@ function CloneRepo {
 function OpenReadmes {
 	"`n$RED■$YLW_ README files$RST"
 	$readmeFiles = Get-ChildItem "readme*" -Recurse -Depth $MaxReadmeSearchDepth | Select-Object FullName -First $MaxReadmes
+	$filesToOpen = @();
 	$readmeFiles | ForEach-Object {
-		println $CYN, $_.FullName
-		if ($ShowReadme) {
-			& $_.FullName
+		$fn = Resolve-Path $_.Fullname -Relative
+		$filesToOpen += $fn
+		println $CYN, $fn
+	}
+	if ($ShowReadme) {
+		if ($OpenReadmeWith.Length) {
+			$Editor = $OpenReadmeWith[0];
+			if ($OpenReadmeWith.Contains('%%%')) {
+				$OpenReadmeWith[$OpenReadmeWith.IndexOf('%%%')] = $filesToOpen -join ' ';
+			}
+			$EditorArgs = $OpenReadmeWith[1,-1] + $filesToOpen
+		} elseif (Test-Path (Get-Command $env:EDITOR).Source) {
+			$Editor = $env:EDITOR;
+			$EditorArgs = $filesToOpen
 		}
+		if($Editor){
+			Start-Process $Editor -ArgumentList $EditorArgs -WorkingDirectory $PWD.Path
+		} else {
+			$filesToOpen.ForEach({. $_})
+		}
+		Write-Debug (fmtDebug 'Editor',$Editor)
+		Write-Debug (fmtDebug 'EditorArgs',$EditorArgs)
 	}
 	println $YLW, (hr `')
 }
@@ -278,7 +315,7 @@ function CheckURL {
 	}
 }
 
-function InstallPackages {
+function DoInstallPackages {
 		"`nInstallation was requested. Prepare:$WHT $PackageManager$YLW $($Launch[$PackageManager].Install)$RST"
 		& $PackageManager $($Launch[$PackageManager].Install)
 		"$YLW$(hr `')$RST"
@@ -305,7 +342,7 @@ function DealPackageJson {
 	if (Test-Path 'package.json') {
 		"Found$YLW package.json$RST"
 		if ($InstallPackages) {
-			InstallPackages
+			DoInstallPackages
 		}
 		RunPackageScripts
 	} else {
@@ -319,9 +356,9 @@ function ProcessRepo {
 		Push-Location $NewDir
 
 		$IsInNewDir = $NewDir -eq ($PWD -replace '^.*\\','')
-		Write-Debug "DestDir: $NewDir"
-		Write-Debug "PWD: $PWD"
-		Write-Debug "IsInNewDir: $IsInNewDir"
+		Write-Debug (fmtDebug 'DestDir', $NewDir)
+		Write-Debug (fmtDebug 'PWD', $PWD)
+		Write-Debug (fmtDebug 'IsInNewDir', $IsInNewDir)
 		"New dir is $($IsInNewDir ? '' : "$($WHT_RED)NOT$RST") set to Dest"
 		if($IsInNewDir) {
 			ShowGitLog
@@ -338,7 +375,6 @@ CheckURL
 CheckDestDir
 CloneRepo
 ProcessRepo
-DealPackageJson
 
 ################################### That's All Folsk!
 
