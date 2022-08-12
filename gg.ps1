@@ -90,6 +90,7 @@ Param (
 
 	$RST = "`e[0m"
 	$DEF = "`e[37m"
+	$INV = "`e[7m"
 
 	$RED = "`e[31m"
 	$GRN = "`e[32m"
@@ -105,61 +106,64 @@ Param (
 	$YLW_ = "`e[1;33m"
 	$CYN_ = "`e[96m"
 
-	$YLW_RED = "`e[1;33;41m"
-	$CYN_RED = "`e[1;96;41m"
-	$WHT_RED = "`e[1;37;41m"
+	$YLW_RED = "`e[103;41m"
+	$CYN_RED = "`e[106;41m"
+	$WHT_RED = "`e[107;41m"
 
 ################## Global Vars
 
-$ggName = $MyInvocation.InvocationName
-# $StartDir = $PWD.Path
-$NewDir = ($DestDir ? $DestDir : $Url.Split('/')[-1].Split('.')[0])
-$HrLength = [Math]::Min( $Host.UI.RawUI.WindowSize.Width, $GitRunCmd.Length )
+	$ggName = $MyInvocation.InvocationName
+	# $StartDir = $PWD.Path
+	$NewDir = ($DestDir ? $DestDir : $Url.Split('/')[-1].Split('.')[0])
+	$HrLength = [Math]::Min( $Host.UI.RawUI.WindowSize.Width, $GitRunCmd.Length )
 
-$DBG_INFO              = @{
-	'Url'                  = $Url;
-	'DestDir'              = $DestDir;
-	'ShowUsage'            = $ShowUsage;
-	'DeepCopy'             = $DeepCopy;
-	'EraseExisting'        = $EraseExisting;
-	'InstallPackages'      = $InstallPackages;
-	'ShowReadme'           = $ShowReadme;
-	'PackageManager'       = $PackageManager
-	'RunScripts'           = $RunScripts;
-	'MaxReadmes'           = $MaxReadmes;
-	'MaxReadmeSearchDepth' = $MaxReadmeSearchDepth;
-	'OpenReadmeWith'       = $OpenReadmeWith
-}
-# hr
-# $DBG_INFO
-# hr
+	$DBG_INFO              = @{
+		'Url'                  = $Url;
+		'DestDir'              = $DestDir;
+		'ShowUsage'            = $ShowUsage;
+		'DeepCopy'             = $DeepCopy;
+		'EraseExisting'        = $EraseExisting;
+		'InstallPackages'      = $InstallPackages;
+		'ShowReadme'           = $ShowReadme;
+		'PackageManager'       = $PackageManager
+		'RunScripts'           = $RunScripts;
+		'MaxReadmes'           = $MaxReadmes;
+		'MaxReadmeSearchDepth' = $MaxReadmeSearchDepth;
+		'OpenReadmeWith'       = $OpenReadmeWith
+	}
+	# hr
+	# $DBG_INFO
+	# hr
 
-if ($Verbose) {$VerbosePreference = "Continue"}
-if ($Debug) {$DebugPreference = "Continue"}
+	if ($Verbose) {$VerbosePreference = "Continue"}
+	if ($Debug) {$DebugPreference = "Continue"}
 
-$Launch = @{
-	yarn = @{
-		Install = '';
-		Run     = '{0}';
-	};
-	npm  = @{
-		Install = 'install';
-		Run     = 'run {0}';
-	};
-	pnpm  = @{
-		Install = 'install';
-		Run     = 'run {0}';
-	};
-}
+	$Launch = @{
+		yarn = @{
+			Install = '';
+			Run     = '{0}';
+		};
+		npm  = @{
+			Install = 'install';
+			Run     = 'run {0}';
+		};
+		pnpm  = @{
+			Install = 'install';
+			Run     = 'run {0}';
+		};
+	}
 
-function hr($Ch = '-', $Cnt = 0 -bor [Console]::WindowWidth / 2) { $Ch * $Cnt }
-function println([string[]]$s) { [Console]::WriteLine($s -join '') }
+	function hr($Ch = '-', $Cnt = 0 -bor [Console]::WindowWidth / 2) { $Ch * $Cnt }
+	function println([string[]]$s) { [Console]::WriteLine($s -join '') }
+	function fmtDebug([String]$msg,[String]$value,[String]$color=$INV){
+		$msg + ($value ? ":{2} {1} $RST" -f $value,$color : '')
+	}
 
 ###################################### Banner (Logo)
 
-"$GRN`nGet the Git $DEF[repo]$GRN (Powershell version)"
-"©2018-2021, CLosk"
-"https://github.com/syncap/get-git`n"
+	"$GRN`nGet the Git $DEF[repo]$GRN (Powershell version)"
+	"©2018-2021, CLosk"
+	"https://github.com/syncap/get-git`n"
 
 ###################################### Functions
 
@@ -214,7 +218,7 @@ function ShowUsage {
 }
 
 function ConfirmEraseDest {
-	$ask = "$YLW_RED Warning! $WHT_RED Folder $CYN_RED$NewDir$WHT_RED seems alive! `n$RST"
+	$ask = "$RST$YLW_RED Warning! $WHT_RED Folder $CYN_RED$NewDir$WHT_RED seems alive! `n$RST"
 	$ask += "$RST`Are you sure you whant to erase existing folder? [$($YLW)y$RST/N]"
 	Return [bool]( (Read-Host $ask) -eq 'y' )
 }
@@ -284,8 +288,8 @@ function OpenReadmes {
 		} else {
 			$filesToOpen.ForEach({. $_})
 		}
-		Write-Debug "Editor: `e[7m $Editor `e[0m"
-		Write-Debug "EditorArgs: `e[7m $EditorArgs `e[0m"
+		Write-Debug (fmtDebug 'Editor',$Editor)
+		Write-Debug (fmtDebug 'EditorArgs',$EditorArgs)
 	}
 	println $YLW, (hr `')
 }
@@ -352,9 +356,9 @@ function ProcessRepo {
 		Push-Location $NewDir
 
 		$IsInNewDir = $NewDir -eq ($PWD -replace '^.*\\','')
-		Write-Debug "DestDir: $NewDir"
-		Write-Debug "PWD: $PWD"
-		Write-Debug "IsInNewDir: $IsInNewDir"
+		Write-Debug (fmtDebug 'DestDir', $NewDir)
+		Write-Debug (fmtDebug 'PWD', $PWD)
+		Write-Debug (fmtDebug 'IsInNewDir', $IsInNewDir)
 		"New dir is $($IsInNewDir ? '' : "$($WHT_RED)NOT$RST") set to Dest"
 		if($IsInNewDir) {
 			ShowGitLog
